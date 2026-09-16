@@ -6,7 +6,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="HYROX">
-<meta name="theme-color" content="#EEF0EC">
+<meta name="theme-color" content="#F3F3F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<script>try{var t=localStorage.getItem("hyrox-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" href="/apple-touch-icon.png">
 <title>HYROX</title>
@@ -14,20 +17,24 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
 :root{
---ground:#EEF0EC; --surface:#FFFFFF; --ink:#15181B; --muted:#5E656B; --line:#D6DAD4;
---accent:#2447D6; --accent-ink:#FFFFFF; --band:rgba(36,71,214,.10); --good:#1E8A4C; --warn:#B7791F;
+--ground:#F3F3F1; --surface:#FFFFFF; --ink:#0A0A0A; --muted:#5E5E5E; --line:#E0E0DC; --accent:#0A0A0A; --accent-ink:#FFE600; --band:rgba(255,222,0,.38); --good:#15803D; --warn:#C2410C; --hi:#FFE600; --hi-edge:#0A0A0A;
 --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
 --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
 --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
---ground:#101315; --surface:#1A1E21; --ink:#ECEEEA; --muted:#9AA2A8; --line:#2C3236;
---accent:#6F8BFF; --accent-ink:#0B0E1A; --band:rgba(111,139,255,.14); --good:#4CC486; --warn:#E0A84A;
+--ground:#000000; --surface:#111111; --ink:#FFFFFF; --muted:#9A9A9A; --line:#2A2A2A; --accent:#FFE600; --accent-ink:#000000; --band:rgba(255,230,0,.14); --good:#4ADE80; --warn:#FF8A3D; --hi:#FFE600; --hi-edge:#FFE600;
+color-scheme:dark;
 }}
 :root[data-theme="dark"]{
---ground:#101315; --surface:#1A1E21; --ink:#ECEEEA; --muted:#9AA2A8; --line:#2C3236;
---accent:#6F8BFF; --accent-ink:#0B0E1A; --band:rgba(111,139,255,.14); --good:#4CC486; --warn:#E0A84A;
+--ground:#000000; --surface:#111111; --ink:#FFFFFF; --muted:#9A9A9A; --line:#2A2A2A; --accent:#FFE600; --accent-ink:#000000; --band:rgba(255,230,0,.14); --good:#4ADE80; --warn:#FF8A3D; --hi:#FFE600; --hi-edge:#FFE600;
+color-scheme:dark;
 }
+.theme{display:flex;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface)}
+.theme button{border:0;background:transparent;color:var(--muted);font:600 12px var(--body);padding:5px 10px;border-radius:999px;cursor:pointer}
+.theme button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.head-right{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 *{box-sizing:border-box}
 html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
@@ -46,7 +53,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
 .board .big{font-family:var(--display);font-size:40px;font-weight:800;line-height:1}
 .board .big small{font-size:16px;font-weight:600;color:var(--muted);margin-left:4px}
 .phase{grid-column:1/-1}
-.phase .big{color:var(--accent)}
+.phase .big{color:var(--accent);align-self:flex-start;background:linear-gradient(transparent 62%,var(--band) 62%);padding-inline:2px}
 section{display:flex;flex-direction:column;gap:10px}
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
 .seg{display:flex;flex-wrap:wrap;gap:6px}
@@ -108,7 +115,7 @@ tr:last-child td{border-bottom:0}
 .leg::before{content:"";position:absolute;left:-20px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
 .run{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
 .run b{font:600 12px var(--mono);letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
-.stn::before{width:14px;height:14px;margin-top:-7px;left:-22px;background:var(--accent);border-color:var(--accent)}
+.stn::before{width:14px;height:14px;margin-top:-7px;left:-22px;background:var(--hi);border-color:var(--hi-edge)}
 .stn.focus::before{background:var(--warn);border-color:var(--warn)}
 .stn-card{display:grid;grid-template-columns:auto 1fr auto;column-gap:12px;row-gap:4px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
 .stn.focus .stn-card{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}
@@ -139,7 +146,7 @@ tr:last-child td{border-bottom:0}
 <div class="eyebrow">HYROX 2027 · Verona solo · Madrid doubles</div>
 <h1>HYROX</h1>
 </div>
-<div class="status" id="status">Connecting…</div>
+<div class="head-right"><div class="theme" role="group" aria-label="Appearance" id="theme"><button type="button" data-t="auto">Auto</button><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button></div><div class="status" id="status">Connecting…</div></div>
 </header>
 <div class="board" aria-label="Race countdown">
 <div><span class="eyebrow">Verona · Jan 28</span><span class="big num" id="dVer">-</span></div>
@@ -515,6 +522,9 @@ if(!(d>=100)){toast("Enter a distance of at least 100 m");return}
 const ok=await add("ergs",{date:$("eDate").value,machine:state.machine,distance:d,seconds:t});
 if(ok){$("eTime").value="";$("ePace").textContent="";toast(state.machine+" saved")}};
 $("ergCards").onclick=e=>{const b=e.target.closest("[data-goal]");if(!b)return;const m=b.dataset.goal;const v=window.prompt(`${m} 1000 m goal time, e.g. 3.50 for 3:50. Leave empty to clear.`,getGoal(m)?fmtT(getGoal(m)):"");if(v===null)return;if(v.trim()===""){setGoal(m,0);render();return}const t=parseTime(v);if(!t){toast("Use a time like 3.50");return}setGoal(m,t);render()};
+function applyTheme(t){const r=document.documentElement;if(t==="light"||t==="dark")r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");try{localStorage.setItem("hyrox-theme",t)}catch(e){}[...$("theme").children].forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===t))}
+(function(){let t="auto";try{t=localStorage.getItem("hyrox-theme")||"auto"}catch(e){}applyTheme(t)})();
+$("theme").onclick=e=>{const b=e.target.closest("[data-t]");if(b)applyTheme(b.dataset.t)};
 header();lsLoad();render();$("status").textContent="Loading…";sync();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){header();sync()}});
 </script>
