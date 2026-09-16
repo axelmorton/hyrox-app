@@ -10,7 +10,7 @@ Personal HYROX training tracker. Plain HTML plus one Vercel function, no build s
 
 1. **Storage > Create > Blob**, access **Private**, connect it to this project.
 2. **Settings > Environment Variables**:
-   - `APP_PASSCODE`: required. Protects your log.
+   - `APP_PASSCODE`: required. Anyone can view the log; the passcode is needed to add or delete entries.
 3. **Deployments > latest > Redeploy** so the new variables load.
 4. Open the site, enter your passcode once, then Safari > Share > Add to Home Screen.
 updated.
