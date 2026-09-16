@@ -185,9 +185,14 @@ tr:last-child td{border-bottom:0}
 <div class="seg" role="group" aria-label="Session type" id="types"></div>
 <div class="row">
 <label>Date<input type="date" id="sDate" required></label>
-<label>Run km<input type="number" id="sKm" inputmode="decimal" step="0.1" min="0" placeholder="0"></label>
+<label id="sKmWrap">Run km<input type="number" id="sKm" inputmode="decimal" step="0.1" min="0" placeholder="0"></label>
 <label>Minutes<input type="number" id="sMin" inputmode="numeric" step="1" min="0" placeholder="60"></label>
 </div>
+<div class="row" id="sErgRow" hidden>
+<label>Distance (m)<input type="text" id="sDist" inputmode="numeric" placeholder="e.g. 850" autocomplete="off"></label>
+<label>Time<input type="text" id="sTime" inputmode="decimal" placeholder="3.12 = 3:12" autocomplete="off"></label>
+</div>
+<div class="hint" id="sErgHint" hidden>Also saves to your Ergs chart. Dictate something like "850 m in 3:12" and distance and time fill in.</div>
 <div class="row">
 <div class="scale"><span>Effort (1 easy, 5 max)</span><div class="seg" role="group" aria-label="Effort" id="sEffort"></div></div>
 <div class="scale"><span>Soreness (1 fresh, 5 wrecked)</span><div class="seg" role="group" aria-label="Soreness" id="sSore"></div></div>
@@ -203,7 +208,7 @@ tr:last-child td{border-bottom:0}
 <form id="fErg">
 <div class="seg" role="group" aria-label="Machine" id="ergMachine"></div>
 <div class="row">
-<label>Distance (m)<input type="number" id="eDist" inputmode="numeric" min="100" step="50" value="1000" required></label>
+<label>Distance (m)<input type="text" id="eDist" inputmode="numeric" value="1000" autocomplete="off" required></label>
 <label>Time<input type="text" id="eTime" inputmode="decimal" placeholder="4.15 = 4:15" autocomplete="off" required></label>
 <label>Date<input type="date" id="eDate" required></label>
 </div>
@@ -257,7 +262,7 @@ tr:last-child td{border-bottom:0}
 </div>
 <div class="toast" id="toast" hidden></div>
 <script>
-const TYPES=["Easy run","Intervals","Compromised","Strength","Simulation","Other"];
+const TYPES=["Easy run","Intervals","Compromised","Strength","Simulation","SkiErg","Row","Other"];
 const TESTS=["1 km run","SkiErg 1000 m","Sled Push 50 m","Sled Pull 50 m","Burpee Broad Jump 80 m","Row 1000 m","Farmers Carry 200 m","Sandbag Lunges 100 m","Wall Balls 100","Full race","Half simulation"];
 const WHO=["Axel","Partner"];
 const PHASES=[
@@ -377,6 +382,13 @@ return `<div class="item"><span class="tag">${esc(tag)}</span><div><div>${main}<
 :`<div class="empty">Nothing logged yet for ${esc(state.who)}. Your first session shows up here.</div>`;
 }
 function parseTime(v){v=String(v).trim().replace(/[\s,;]/g,".");let m=v.match(/^(\d{1,3})[:.]([0-5]\d)$/);if(m)return +m[1]*60+ +m[2];m=v.match(/^(\d{1,3})([0-5]\d)$/);if(m)return +m[1]*60+ +m[2];return null}
+function parseDist(v){v=String(v||"").toLowerCase().replace(/,/g,"").trim();let m=v.match(/^(\d+(?:\.\d+)?)\s*(km|k)$/);if(m)return Math.round(+m[1]*1000);m=v.match(/^(\d+)\s*(m|meters?|metres?)?$/);return m?+m[1]:NaN}
+function parseSpoken(t){t=String(t||"").toLowerCase().replace(/,/g,"");let dist=null,secs=null;
+let m=t.match(/(\d+(?:\.\d+)?)\s*(km|kilomet(?:er|re)s?)\b/);if(m)dist=Math.round(+m[1]*1000);
+if(dist==null){m=t.match(/(\d{2,5})\s*(m|meters?|metres?)\b/);if(m)dist=+m[1]}
+m=t.match(/(\d{1,2}):([0-5]\d)/);if(m)secs=+m[1]*60+ +m[2];
+if(secs==null){m=t.match(/(\d{1,2})\s*min(?:ute)?s?(?:\s*(?:and)?\s*(\d{1,2})\s*sec(?:ond)?s?)?/);if(m)secs=+m[1]*60+(+m[2]||0)}
+return{dist,secs}}
 function est1000(dist,sec){return sec*Math.pow(1000/dist,1.06)}
 function getGoal(m){try{return +localStorage.getItem("hyrox-goal-"+m)||0}catch(e){return 0}}
 function setGoal(m,v){try{localStorage.setItem("hyrox-goal-"+m,String(v))}catch(e){}}
@@ -462,7 +474,11 @@ else{fc.textContent="Tap Focus on any station";fc.className="chip"}
 }
 function render(){todayCard();raceMap();loadCheck();ergCards();chart();benchTable();recent()}
 function growNote(){const t=$("sNote");if(!t)return;t.style.height="auto";t.style.height=Math.max(84,t.scrollHeight+2)+"px"}
-document.addEventListener("input",e=>{if(e.target&&e.target.id==="sNote")growNote()});
+function isErgType(){return MACHINES.includes(state.type)}
+function syncErg(){const on=isErgType();$("sErgRow").hidden=!on;$("sErgHint").hidden=!on;$("sKmWrap").hidden=on}
+function autofillErg(){if(!isErgType())return;const p=parseSpoken($("sNote").value);
+[["sDist",p.dist,v=>String(v)],["sTime",p.secs,v=>Math.floor(v/60)+":"+String(v%60).padStart(2,"0")]].forEach(([id,val,f])=>{const el=$(id);if(val==null)return;if(el.value===""||el.dataset.auto==="1"){el.value=f(val);el.dataset.auto="1"}})}
+document.addEventListener("input",e=>{const id=e.target&&e.target.id;if(id==="sNote"){growNote();autofillErg()}if(id==="sDist"||id==="sTime")e.target.dataset.auto="0"});
 // storage: server (Vercel Blob via /api/data) with a local cache for instant load
 const LS="roxlog-v1";
 let db=null, local=false;
@@ -494,18 +510,23 @@ try{applyData(await api("/api/data",{op:"delete",col,id}))}catch(e){toast("Could
 }
 // forms
 seg($("who"),WHO,()=>state.who,v=>state.who=v);
-seg($("types"),TYPES,()=>state.type,v=>state.type=v);
+seg($("types"),TYPES,()=>state.type,v=>{state.type=v;syncErg()});
 function scaleSeg(el,key){el.innerHTML="";["1","2","3","4","5"].forEach(o=>{const b=document.createElement("button");b.type="button";b.textContent=o;b.setAttribute("aria-pressed",String(state[key])===o);
 b.onclick=()=>{state[key]=String(state[key])===o?0:+o;[...el.children].forEach(c=>c.setAttribute("aria-pressed",String(state[key])===c.textContent))};el.appendChild(b)})}
 scaleSeg($("sEffort"),"effort");scaleSeg($("sSore"),"sore");
-$("tLog").onclick=()=>{const pl=planFor(today());if(!pl.type)return;state.type=pl.type;seg($("types"),TYPES,()=>state.type,v=>state.type=v);
+$("tLog").onclick=()=>{const pl=planFor(today());if(!pl.type)return;state.type=pl.type;seg($("types"),TYPES,()=>state.type,v=>{state.type=v;syncErg()});syncErg();
 $("sDate").value=today();$("sNote").value=pl.title;growNote();$("fSession").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});setTimeout(()=>$("sKm").focus({preventScroll:true}),350)};
 $("bItem").innerHTML=TESTS.map(t=>`<option>${t}</option>`).join("");
 $("sDate").value=today();$("bDate").value=today();
 $("fSession").onsubmit=async e=>{e.preventDefault();
-const km=parseFloat($("sKm").value)||0,min=parseInt($("sMin").value)||0;
+const erg=isErgType();let d=0,t=0;
+if(erg){autofillErg();d=parseDist($("sDist").value);t=parseTime($("sTime").value);
+if(!(d>=100)){toast("Enter the distance, like 850");return}
+if(!t){toast("Enter the time, like 3.12 (= 3:12)");return}}
+const km=erg?0:(parseFloat($("sKm").value)||0);let min=parseInt($("sMin").value)||0;if(erg&&!min)min=Math.max(1,Math.round(t/60));
 const ok=await add("sessions",{date:$("sDate").value,type:state.type,km,minutes:min,effort:state.effort||0,soreness:state.sore||0,note:$("sNote").value.trim()});
-if(ok){$("sKm").value="";$("sMin").value="";$("sNote").value="";growNote();state.effort=0;state.sore=0;scaleSeg($("sEffort"),"effort");scaleSeg($("sSore"),"sore");toast("Session saved")}};
+if(ok&&erg){const ok2=await add("ergs",{date:$("sDate").value,machine:state.type,distance:d,seconds:t});if(!ok2)toast("Session saved, but the erg piece didn't. Add it in Ergs.")}
+if(ok){$("sKm").value="";$("sMin").value="";$("sDist").value="";$("sTime").value="";$("sDist").dataset.auto="";$("sTime").dataset.auto="";$("sNote").value="";growNote();state.effort=0;state.sore=0;scaleSeg($("sEffort"),"effort");scaleSeg($("sSore"),"sore");toast("Session saved")}};
 $("fBench").onsubmit=async e=>{e.preventDefault();
 const secs=parseTime($("bTime").value);if(!secs){toast("Enter time like 4.30 or 430 (= 4:30)");return}
 const ok=await add("benchmarks",{date:$("bDate").value,item:$("bItem").value,seconds:secs,note:""});
@@ -515,10 +536,10 @@ $("course").onclick=e=>{const b=e.target.closest("[data-focus]");if(!b)return;co
 $("recent").onclick=e=>{const b=e.target.closest(".del");if(b)remove(b.dataset.kind,b.dataset.id)};
 seg($("ergMachine"),MACHINES,()=>state.machine,v=>state.machine=v);
 $("eDate").value=today();
-function ergPaceHint(){const d=+$("eDist").value,t=parseTime($("eTime").value);$("ePace").textContent=d>0&&t?`Pace ${fmtT(t/d*500)}/500 m · 1000 m ${d===1000?"":"estimate "}${fmtT(d===1000?t:est1000(d,t))}`:""}
+function ergPaceHint(){const d=parseDist($("eDist").value),t=parseTime($("eTime").value);$("ePace").textContent=d>0&&t?`Pace ${fmtT(t/d*500)}/500 m · 1000 m ${d===1000?"":"estimate "}${fmtT(d===1000?t:est1000(d,t))}`:""}
 $("eDist").oninput=ergPaceHint;$("eTime").oninput=ergPaceHint;
 $("fErg").onsubmit=async e=>{e.preventDefault();
-const t=parseTime($("eTime").value),d=Math.round(+$("eDist").value);
+const t=parseTime($("eTime").value),d=parseDist($("eDist").value);
 if(!t){toast("Enter time like 4.15 or 415 (= 4:15)");return}
 if(!(d>=100)){toast("Enter a distance of at least 100 m");return}
 const ok=await add("ergs",{date:$("eDate").value,machine:state.machine,distance:d,seconds:t});
