@@ -97,6 +97,39 @@ tr:last-child td{border-bottom:0}
 .linkbtn{background:none;border:0;color:var(--accent);font:600 13px var(--body);cursor:pointer;padding:0}
 .bar{height:8px;border-radius:99px;background:var(--band);overflow:hidden}
 .bar i{display:block;height:100%;background:var(--accent);border-radius:99px}
+.rules{display:flex;gap:8px;flex-wrap:wrap}
+.rulelink{text-align:left;display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);text-decoration:none;font-weight:600;font-size:13px;flex:1;min-width:150px}
+.rulelink small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+.rulelink .ic{width:28px;height:28px;border-radius:7px;background:var(--band);color:var(--accent);display:grid;place-items:center;font:700 11px var(--mono);flex:none}
+.map-sum{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.course{position:relative;display:flex;flex-direction:column;padding-left:26px}
+.course::before{content:"";position:absolute;left:11px;top:14px;bottom:14px;width:2px;background:repeating-linear-gradient(to bottom,var(--line) 0 6px,transparent 6px 11px)}
+.leg{position:relative;padding:7px 0}
+.leg::before{content:"";position:absolute;left:-20px;top:50%;width:10px;height:10px;margin-top:-5px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.run{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.run b{font:600 12px var(--mono);letter-spacing:.04em;color:var(--muted);text-transform:uppercase}
+.stn::before{width:14px;height:14px;margin-top:-7px;left:-22px;background:var(--accent);border-color:var(--accent)}
+.stn.focus::before{background:var(--warn);border-color:var(--warn)}
+.stn-card{display:grid;grid-template-columns:auto 1fr auto;column-gap:12px;row-gap:4px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.stn.focus .stn-card{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn) inset}
+.stn-no{font:800 26px/1 var(--display);color:var(--accent);width:30px;text-align:center}
+.stn.focus .stn-no{color:var(--warn)}
+.stn-name{font:700 18px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.stn-spec{font-size:12px;color:var(--muted);margin-top:2px}
+.stn-tip{grid-column:1/-1;font-size:12px;color:var(--muted);padding-top:8px;border-top:1px solid var(--line);margin-top:6px}
+.stn-none{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stn-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.stn-time{font:500 13px var(--mono)}
+.star{background:none;border:1px solid var(--line);border-radius:999px;color:var(--muted);font:600 11px var(--body);padding:4px 9px;cursor:pointer;white-space:nowrap}
+.star[aria-pressed="true"]{border-color:var(--warn);color:var(--warn);background:transparent}
+.lvl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.lvl button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:10px;padding:8px 6px;cursor:pointer;text-align:center;font:600 13px var(--body)}
+.lvl button small{display:block;font:500 11px var(--mono);color:var(--muted);margin-top:2px}
+.lvl button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.lvl button[aria-pressed="true"] small{color:var(--accent-ink);opacity:.85}
+.tgt{font:500 12px var(--mono);color:var(--muted);white-space:nowrap}
+.delta-ok{color:var(--good)}.delta-bad{color:var(--warn)}
+.finish{font:800 16px var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--good)}
 </style>
 </head>
 <body>
@@ -113,6 +146,10 @@ tr:last-child td{border-bottom:0}
 <div><span class="eyebrow">Madrid · Mar 17</span><span class="big num" id="dMad">-</span></div>
 <div class="phase"><span class="eyebrow" id="phaseDates">Current phase</span><span class="big" id="phase">-</span><span class="status" id="phaseFocus"></span></div>
 </div>
+<div class="rules">
+<a class="rulelink" href="https://maintain.hyrox.com/rulebooks/HYROX_RulebookSingles_EN.pdf" target="_blank" rel="noopener"><span class="ic">PDF</span><span>Singles rulebook<small>Verona · official 26/27</small></span></a>
+<a class="rulelink" href="https://maintain.hyrox.com/rulebooks/HYROX_RulebookDoubles_EN.pdf" target="_blank" rel="noopener"><span class="ic">PDF</span><span>Doubles rulebook<small>Madrid · official 26/27</small></span></a>
+</div>
 <section>
 <div class="seg" role="group" aria-label="Athlete" id="who"></div>
 </section>
@@ -123,6 +160,15 @@ tr:last-child td{border-bottom:0}
 <div class="plan" id="tPlan">-</div>
 <div class="hint" id="tDetail"></div>
 <button type="button" class="primary" id="tLog">Log this session</button>
+</div>
+</section>
+<section>
+<h2>Race map</h2>
+<div class="panel" style="display:flex;flex-direction:column;gap:12px">
+<div class="lvl" role="group" aria-label="Target level" id="lvl"></div>
+<div class="hint" id="lvlNote"></div>
+<div class="map-sum"><span class="hint" id="mapSum">8 × 1 km run + 8 stations · Men Open and Doubles Men weights</span><span class="chip" id="mapFocus">Tap Focus on any station</span></div>
+<div class="course" id="course"></div>
 </div>
 </section>
 <section>
@@ -348,21 +394,66 @@ return g+`</svg>`;
 }
 function ergCards(){
 $("ergCards").innerHTML=MACHINES.map(m=>{
-const pts=ergPoints(m),goal=getGoal(m);
-if(!pts.length)return `<div class="panel erg-card"><div class="erg-top"><h2>${m}</h2><button class="linkbtn" data-goal="${m}">${goal?"Goal "+fmtT(goal):"Set 1000 m goal"}</button></div><div class="empty">No ${m} pieces yet. Log any distance above and your 1000 m estimate shows here.</div></div>`;
+const pts=ergPoints(m),custom=getGoal(m),lvlT=LEVELS[getLevel()].st[m==="SkiErg"?0:4],goal=custom||lvlT;
+const glabel=custom?`Goal ${fmtT(goal)} · ${fmtT(goal/2)}/500`:`${getLevel()} target ${fmtT(goal)} · ${fmtT(goal/2)}/500`;
+if(!pts.length)return `<div class="panel erg-card"><div class="erg-top"><h2>${m}</h2><button class="linkbtn" data-goal="${m}">${glabel}</button></div><div class="empty">No ${m} pieces yet. Log any distance above and your 1000 m estimate shows here.</div></div>`;
 const act=pts.filter(p=>p.actual),use=act.length?act:pts,isAct=act.length>0;
 const best=Math.min(...use.map(p=>p.v)),latest=use[use.length-1],first=use[0];
 const ch=latest.v-first.v;
 let progress="";
 if(goal){const start=Math.max(first.v,best);const pct=start<=goal?100:Math.max(0,Math.min(100,(start-best)/(start-goal)*100));progress=best<=goal?`<div class="chip ok">Goal reached</div>`:`<div class="bar" aria-label="Progress to goal"><i style="width:${pct.toFixed(0)}%"></i></div><div class="hint">${fmtT(best-goal)} to go</div>`}
-return `<div class="panel erg-card"><div class="erg-top"><h2>${m}</h2><button class="linkbtn" data-goal="${m}">${goal?"Goal "+fmtT(goal):"Set 1000 m goal"}</button></div>
+return `<div class="panel erg-card"><div class="erg-top"><h2>${m}</h2><button class="linkbtn" data-goal="${m}">${glabel}</button></div>
 <div><span class="eyebrow">Best 1000 m ${isAct?"":"(estimate)"}</span><div class="erg-big num">${fmtT(best)}</div></div>
 ${progress}
 <div class="erg-stats"><div>Latest<b>${fmtT(latest.v)}</b></div><div>Pace /500<b>${fmtT(best/2)}</b></div><div>Change<b style="color:${use.length<2?"var(--ink)":ch<=0?"var(--good)":"var(--warn)"}">${use.length<2?"-":(ch<=0?"\u2212":"+")+fmtT(Math.abs(ch))}</b></div></div>
 ${ergSpark(pts,goal)}
 <div class="hint">Higher on the line = faster. Filled dots: real 1000 m. Hollow: estimated from other distances.</div></div>`}).join("");
 }
-function render(){todayCard();loadCheck();ergCards();chart();benchTable();recent()}
+const STATIONS=[
+{name:"SkiErg",spec:"1000 m",test:"SkiErg 1000 m",erg:"SkiErg",tip:"Hinge and drive with lats and core, not just arms."},
+{name:"Sled Push",spec:"50 m · 152 kg incl. sled",test:"Sled Push 50 m",tip:"Low body angle, short fast steps, arms locked."},
+{name:"Sled Pull",spec:"50 m · 103 kg incl. sled",test:"Sled Pull 50 m",tip:"Walk backwards and use your hips, hand over hand."},
+{name:"Burpee Broad Jump",spec:"80 m",test:"Burpee Broad Jump 80 m",tip:"Chest to floor, two-foot jumps, steady rhythm."},
+{name:"Row",spec:"1000 m",test:"Row 1000 m",erg:"Row",tip:"Controlled work, not rest. Legs first, 24 to 28 spm."},
+{name:"Farmers Carry",spec:"200 m · 2 × 24 kg",test:"Farmers Carry 200 m",tip:"Short quick steps, shoulders packed, grip tight."},
+{name:"Sandbag Lunges",spec:"100 m · 20 kg",test:"Sandbag Lunges 100 m",tip:"Back knee touches every step. Never drop the bag."},
+{name:"Wall Balls",spec:"100 reps · 6 kg · 3.00 m target",test:"Wall Balls 100",tip:"Hip crease below knee, hit the target. Sets you can hold."}
+];
+const LEVELS={
+Casual:{finish:"1:30",note:"About an average men's finish",run:330,st:[300,190,290,300,300,150,280,360]},
+Moderate:{finish:"1:20",note:"Solid, well above average",run:298,st:[280,160,250,255,280,130,240,315]},
+Pro:{finish:"1:10",note:"Chasing a top finish",run:269,st:[260,130,220,220,260,110,210,270]}
+};
+function getLevel(){try{const v=localStorage.getItem("hyrox-level");return LEVELS[v]?v:"Moderate"}catch(e){return "Moderate"}}
+function setLevel(v){try{localStorage.setItem("hyrox-level",v)}catch(e){}}
+function getFocus(){try{return JSON.parse(localStorage.getItem("hyrox-focus")||"[]")}catch(e){return []}}
+function setFocus(a){try{localStorage.setItem("hyrox-focus",JSON.stringify(a))}catch(e){}}
+function stationBest(st){
+const who=state.who;let best=null;
+state.bench.filter(b=>b.item===st.test&&(b.athlete||"Axel")===who).forEach(b=>{if(best==null||b.seconds<best)best=b.seconds});
+if(st.erg)state.ergs.filter(e=>e.machine===st.erg&&e.distance===1000&&(e.athlete||"Axel")===who).forEach(e=>{if(best==null||e.seconds<best)best=e.seconds});
+return best;
+}
+function raceMap(){
+const focus=getFocus();let tested=0;const L=getLevel(),LV=LEVELS[L];
+$("lvl").innerHTML=Object.keys(LEVELS).map(k=>`<button type="button" data-lvl="${k}" aria-pressed="${k===L}">${k}<small>${LEVELS[k].finish} finish</small></button>`).join("");
+$("lvlNote").textContent=`${L}: ${LV.note}. Targets are split times for a ${LV.finish} men\u2019s finish, from HyroxDataLab race data.`;
+const runBest=(()=>{let b=null;state.bench.filter(x=>x.item==="1 km run"&&(x.athlete||"Axel")===state.who).forEach(x=>{if(b==null||x.seconds<b)b=x.seconds});return b})();
+let h="";
+STATIONS.forEach((st,i)=>{
+const best=stationBest(st);if(best!=null)tested++;
+const isF=focus.includes(st.name);
+h+=`<div class="leg run"><span><b>Run ${i+1}</b> · 1 km</span><span class="tgt">target ${fmtT(LV.run)}/km${i===0&&runBest!=null?" · best "+fmtT(runBest):""}</span></div>`;
+h+=`<div class="leg stn${isF?" focus":""}"><div class="stn-card"><div class="stn-no">${i+1}</div><div><div class="stn-name">${st.name}</div><div class="stn-spec">${st.spec}</div></div><div class="stn-side"><span class="tgt">target ${fmtT(LV.st[i])}</span><span class="stn-time">${best!=null?`${fmtT(best)} <span class="${best<=LV.st[i]?"delta-ok":"delta-bad"}">${best<=LV.st[i]?"\u2713":"+"+fmtT(best-LV.st[i])}</span>`:'<span class="stn-none">No time yet</span>'}</span><button type="button" class="star" data-focus="${st.name}" aria-pressed="${isF}">${isF?"★ Focus":"☆ Focus"}</button></div><div class="stn-tip">${st.tip}</div></div></div>`;
+});
+h+=`<div class="leg run"><span class="finish">Finish</span><span></span></div>`;
+$("course").innerHTML=h;
+$("mapSum").textContent=`${tested} of 8 stations tested · Men Open and Doubles Men weights`;
+const fc=$("mapFocus");
+if(focus.length){fc.textContent="Focus: "+STATIONS.filter(s=>focus.includes(s.name)).map(s=>s.name).join(", ");fc.className="chip warn"}
+else{fc.textContent="Tap Focus on any station";fc.className="chip"}
+}
+function render(){todayCard();raceMap();loadCheck();ergCards();chart();benchTable();recent()}
 // storage: server (Vercel Blob via /api/data) with a local cache for instant load
 const LS="roxlog-v1";
 let db=null, local=false;
@@ -410,6 +501,8 @@ $("fBench").onsubmit=async e=>{e.preventDefault();
 const secs=parseTime($("bTime").value);if(!secs){toast("Enter time like 4.30 or 430 (= 4:30)");return}
 const ok=await add("benchmarks",{date:$("bDate").value,item:$("bItem").value,seconds:secs,note:""});
 if(ok){$("bTime").value="";toast("Time saved")}};
+$("lvl").onclick=e=>{const b=e.target.closest("[data-lvl]");if(!b)return;setLevel(b.dataset.lvl);render()};
+$("course").onclick=e=>{const b=e.target.closest("[data-focus]");if(!b)return;const n=b.dataset.focus;let f=getFocus();f=f.includes(n)?f.filter(x=>x!==n):f.concat(n);setFocus(f);raceMap()};
 $("recent").onclick=e=>{const b=e.target.closest(".del");if(b)remove(b.dataset.kind,b.dataset.id)};
 seg($("ergMachine"),MACHINES,()=>state.machine,v=>state.machine=v);
 $("eDate").value=today();
