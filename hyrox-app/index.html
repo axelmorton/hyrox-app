@@ -62,8 +62,8 @@ section{display:flex;flex-direction:column;gap:10px}
 form{display:flex;flex-direction:column;gap:12px}
 .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
 label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);font-weight:500}
-input,select{font:15px var(--body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--ground);color:var(--ink);width:100%;min-width:0}
-input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select,textarea{font:15px var(--body);padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--ground);color:var(--ink);width:100%;min-width:0}textarea{font-size:16px;line-height:1.4;min-height:84px;resize:vertical;overflow:hidden}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .primary{font:700 16px var(--display);text-transform:uppercase;letter-spacing:.06em;background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:11px;cursor:pointer}
 .chart svg{width:100%;height:auto;display:block}
 .legend{font-size:12px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
@@ -192,7 +192,7 @@ tr:last-child td{border-bottom:0}
 <div class="scale"><span>Effort (1 easy, 5 max)</span><div class="seg" role="group" aria-label="Effort" id="sEffort"></div></div>
 <div class="scale"><span>Soreness (1 fresh, 5 wrecked)</span><div class="seg" role="group" aria-label="Soreness" id="sSore"></div></div>
 </div>
-<label>Note<input type="text" id="sNote" placeholder="e.g. 6 x 1km @ 4:45, felt strong"></label>
+<label>Notes: dictate or type how it went<textarea id="sNote" rows="3" placeholder="e.g. 6 x 1 km at 4:45, 90 s rest. Felt strong, legs heavy on the last two."></textarea></label>
 <button class="primary" type="submit">Save session</button>
 </form>
 </div>
@@ -461,6 +461,8 @@ if(focus.length){fc.textContent="Focus: "+STATIONS.filter(s=>focus.includes(s.na
 else{fc.textContent="Tap Focus on any station";fc.className="chip"}
 }
 function render(){todayCard();raceMap();loadCheck();ergCards();chart();benchTable();recent()}
+function growNote(){const t=$("sNote");if(!t)return;t.style.height="auto";t.style.height=Math.max(84,t.scrollHeight+2)+"px"}
+document.addEventListener("input",e=>{if(e.target&&e.target.id==="sNote")growNote()});
 // storage: server (Vercel Blob via /api/data) with a local cache for instant load
 const LS="roxlog-v1";
 let db=null, local=false;
@@ -497,13 +499,13 @@ function scaleSeg(el,key){el.innerHTML="";["1","2","3","4","5"].forEach(o=>{cons
 b.onclick=()=>{state[key]=String(state[key])===o?0:+o;[...el.children].forEach(c=>c.setAttribute("aria-pressed",String(state[key])===c.textContent))};el.appendChild(b)})}
 scaleSeg($("sEffort"),"effort");scaleSeg($("sSore"),"sore");
 $("tLog").onclick=()=>{const pl=planFor(today());if(!pl.type)return;state.type=pl.type;seg($("types"),TYPES,()=>state.type,v=>state.type=v);
-$("sDate").value=today();$("sNote").value=pl.title;$("fSession").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});setTimeout(()=>$("sKm").focus({preventScroll:true}),350)};
+$("sDate").value=today();$("sNote").value=pl.title;growNote();$("fSession").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});setTimeout(()=>$("sKm").focus({preventScroll:true}),350)};
 $("bItem").innerHTML=TESTS.map(t=>`<option>${t}</option>`).join("");
 $("sDate").value=today();$("bDate").value=today();
 $("fSession").onsubmit=async e=>{e.preventDefault();
 const km=parseFloat($("sKm").value)||0,min=parseInt($("sMin").value)||0;
 const ok=await add("sessions",{date:$("sDate").value,type:state.type,km,minutes:min,effort:state.effort||0,soreness:state.sore||0,note:$("sNote").value.trim()});
-if(ok){$("sKm").value="";$("sMin").value="";$("sNote").value="";state.effort=0;state.sore=0;scaleSeg($("sEffort"),"effort");scaleSeg($("sSore"),"sore");toast("Session saved")}};
+if(ok){$("sKm").value="";$("sMin").value="";$("sNote").value="";growNote();state.effort=0;state.sore=0;scaleSeg($("sEffort"),"effort");scaleSeg($("sSore"),"sore");toast("Session saved")}};
 $("fBench").onsubmit=async e=>{e.preventDefault();
 const secs=parseTime($("bTime").value);if(!secs){toast("Enter time like 4.30 or 430 (= 4:30)");return}
 const ok=await add("benchmarks",{date:$("bDate").value,item:$("bItem").value,seconds:secs,note:""});
