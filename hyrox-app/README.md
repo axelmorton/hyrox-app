@@ -13,3 +13,4 @@ Personal HYROX training tracker. Plain HTML plus one Vercel function, no build s
    - `APP_PASSCODE`: required. Protects your log.
 3. **Deployments > latest > Redeploy** so the new variables load.
 4. Open the site, enter your passcode once, then Safari > Share > Add to Home Screen.
+updated.
