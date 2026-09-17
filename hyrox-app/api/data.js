@@ -108,6 +108,7 @@ export default async function handler(req, res) {
     // Viewing is public: anyone can read the log.
     if (req.method === "GET") return res.status(200).json(await load());
     if (req.method !== "POST") return res.status(405).json({ error: "GET or POST only" });
+    if (process.env.NOE_PASSCODE && process.env.NOE_PASSCODE === process.env.APP_PASSCODE) return res.status(500).json({ error: "APP_PASSCODE and NOE_PASSCODE must be different" });
 
     const user = whoIs(req.headers["x-app-pass"]);
     if (!user) {
