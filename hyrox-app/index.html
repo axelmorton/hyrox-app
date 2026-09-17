@@ -176,6 +176,51 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .badge .when{font:500 11px var(--mono);color:var(--good)}
 .badge .bar{width:100%;height:6px}
 .badge .prog{font:500 11px var(--mono);color:var(--muted)}
+
+.tabbar{grid-template-columns:repeat(4,1fr)}
+.acct{background:transparent;cursor:pointer}
+.item-main{background:none;border:0;padding:0;margin:0;text-align:left;color:inherit;font:inherit;cursor:pointer;min-width:0;width:100%}
+.item.pending{opacity:.7}
+.sheet{border:0;padding:0;margin:auto auto 0;width:100%;max-width:640px;max-height:92vh;border-radius:16px 16px 0 0;background:var(--surface);color:var(--ink)}
+.sheet::backdrop{background:rgba(0,0,0,.55)}
+#sheetBody{padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;overflow:auto;max-height:92vh}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sheet-x{background:none;border:1px solid var(--line);border-radius:999px;width:36px;height:36px;color:var(--ink);font-size:20px;cursor:pointer}
+.danger{font:600 14px var(--body);background:transparent;color:var(--warn);border:1px solid var(--warn);border-radius:8px;padding:10px;cursor:pointer}
+.ghost{font:600 14px var(--body);background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;cursor:pointer}
+.err{color:var(--warn);font-size:13px}
+.check{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--ink)}
+.check input{width:auto}
+.sim{position:fixed;inset:0;z-index:40;background:#0A0A0A;color:#fff;display:flex;flex-direction:column;gap:12px;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px));overflow:auto}
+.sim[hidden]{display:none!important}
+.sim .eyebrow{color:#9A9A9A}
+.sim-top{display:flex;justify-content:space-between;align-items:center}
+.sim-ghost{background:transparent;border:1px solid #333;color:#fff;border-radius:999px;padding:9px 16px;font:600 14px var(--body);cursor:pointer}
+.sim-total{font:800 76px/1 var(--display);letter-spacing:.01em}
+.sim-proj{font:600 14px var(--body);color:#9A9A9A;min-height:20px}
+.sim-seg{background:#161616;border:1px solid #2A2A2A;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.sim-name{font:800 32px/1.05 var(--display);text-transform:uppercase;color:#FFE600}
+.sim-segtime{font:800 48px/1 var(--display)}
+.sim .tgt{color:#9A9A9A}
+.sim-split{flex:1;min-height:150px;border:0;border-radius:18px;background:#FFE600;color:#0A0A0A;font:800 44px var(--display);text-transform:uppercase;letter-spacing:.04em;cursor:pointer}
+.sim-split:active{transform:scale(.99)}
+.sim-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sim-log{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:2px;font:500 13px var(--mono);color:#9A9A9A}
+.sim-log li{display:flex;justify-content:space-between;gap:8px}
+.good-t{color:#4ADE80}.bad-t{color:#FF8A3D}
+.rank{font:800 22px/1 var(--display);color:var(--accent);width:22px;text-align:center}
+.dbl{display:flex;flex-direction:column;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.dbl:last-child{border-bottom:0}
+.dbl-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.dbl-top b{font:700 17px var(--display);text-transform:uppercase}
+.wk-nav{display:flex;gap:6px}
+.wk-row{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);background:none;border-left:0;border-right:0;border-top:0;color:inherit;text-align:left;font:inherit;width:100%;cursor:pointer}
+.wk-row:last-child{border-bottom:0}
+.wk-row.today .wk-day{color:var(--accent)}
+.wk-day{font:700 15px/1.1 var(--display);text-transform:uppercase}
+.wk-day small{display:block;font:500 11px var(--mono);color:var(--muted)}
+.wk-sum{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.recap-img{width:100%;border-radius:12px;border:1px solid var(--line)}
 </style>
 </head>
 <body>
@@ -185,7 +230,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="eyebrow">HYROX 2027 · Verona solo · Madrid doubles</div>
 <h1>HYROX</h1>
 </div>
-<div class="head-right"><div class="theme" role="group" aria-label="Appearance" id="theme"><button type="button" data-t="auto">Auto</button><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button></div><div class="status" id="status">Connecting…</div></div>
+<div class="head-right"><div class="theme" role="group" aria-label="Appearance" id="theme"><button type="button" data-t="auto">Auto</button><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button></div><div class="status" id="status">Connecting…</div><button type="button" class="chip acct" id="acct">Sign in</button></div>
 </header>
 <div class="seg" role="group" aria-label="Athlete" id="who"></div>
 <div id="pgTrain" class="page">
@@ -205,15 +250,6 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="plan" id="tPlan">-</div>
 <div class="hint" id="tDetail"></div>
 <button type="button" class="primary" id="tLog">Log this session</button>
-</div>
-</section>
-<section>
-<h2>Race map</h2>
-<div class="panel" style="display:flex;flex-direction:column;gap:12px">
-<div class="lvl" role="group" aria-label="Target level" id="lvl"></div>
-<div class="hint" id="lvlNote"></div>
-<div class="map-sum"><span class="hint" id="mapSum">8 × 1 km run + 8 stations · Men Open and Doubles Men weights</span><span class="chip" id="mapFocus">Tap Focus on any station</span></div>
-<div class="course" id="course"></div>
 </div>
 </section>
 <section>
@@ -298,11 +334,54 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="panel list" id="recent"></div>
 </section>
 </div>
+<div id="pgRace" class="page" hidden>
+<section>
+<h2>Race simulation</h2>
+<div class="panel" style="display:flex;flex-direction:column;gap:12px">
+<div class="seg" role="group" aria-label="Simulation length" id="simMode"></div>
+<div class="hint" id="simHint"></div>
+<button type="button" class="primary" id="simStart">Start simulation</button>
+<div class="list" id="simHistory"></div>
+</div>
+</section>
+<section>
+<h2>Weak stations</h2>
+<div class="panel" style="display:flex;flex-direction:column;gap:10px">
+<div class="list" id="weakList"></div>
+<div class="hint" id="weakHint"></div>
+<button type="button" class="primary" id="weakFocus">Focus my 3 weakest</button>
+</div>
+</section>
+<section>
+<h2>Race map</h2>
+<div class="panel" style="display:flex;flex-direction:column;gap:12px">
+<div class="lvl" role="group" aria-label="Target level" id="lvl"></div>
+<div class="hint" id="lvlNote"></div>
+<div class="map-sum"><span class="hint" id="mapSum">8 × 1 km run + 8 stations · Men Open and Doubles Men weights</span><span class="chip" id="mapFocus">Tap Focus on any station</span></div>
+<div class="course" id="course"></div>
+</div>
+</section>
+<section>
+<h2>Madrid doubles plan</h2>
+<div class="panel">
+<div class="hint">You run every 1 km together. At each station you split the work however you like, but only one of you works at a time.</div>
+<div id="dblList"></div>
+</div>
+</section>
+</div>
 <div id="pgCal" class="page" hidden>
 <section>
 <h2>Calendar</h2>
 <div class="board" id="calStats"></div>
 <div class="hint">Streaks allow one rest day in a row. Two days off in a row resets it.</div>
+</section>
+<section>
+<div class="badge-top"><h2 id="wkTitle">This week</h2><div class="wk-nav"><button type="button" class="navbtn" id="wkPrev" aria-label="Previous week">&lsaquo;</button><button type="button" class="navbtn" id="wkNext" aria-label="Next week">&rsaquo;</button></div></div>
+<div class="panel">
+<div class="wk-sum"><span id="wkSum" class="hint"></span><span class="chip" id="wkPct"></span></div>
+<div id="wkList"></div>
+<button type="button" class="primary" id="recapBtn" style="width:100%;margin-top:10px">Weekly recap card</button>
+</div>
 </section>
 <section>
 <div class="panel">
@@ -331,14 +410,26 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 </div>
 <nav class="tabbar" aria-label="Pages">
 <button type="button" data-pg="train" aria-current="page"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span>Train</button>
+<button type="button" data-pg="race"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5M12 2.5V5"/></svg></span>Race</button>
 <button type="button" data-pg="calendar"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>Calendar</button>
 <button type="button" data-pg="badges"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5 7 21l5-2.5 5 2.5-1.5-7.5"/></svg></span>Badges</button>
 </nav>
+<div id="sim" class="sim" hidden role="dialog" aria-modal="true" aria-label="Race simulation">
+<div class="sim-top"><span class="eyebrow" id="simLevel"></span><button type="button" class="sim-ghost" id="simEnd">End</button></div>
+<div class="sim-total num" id="simTotal">0:00</div>
+<div class="sim-proj" id="simProj"></div>
+<div class="sim-seg"><span class="eyebrow" id="simStep"></span><span class="sim-name" id="simName"></span><span class="sim-segtime num" id="simSegTime">0:00</span><span class="tgt" id="simTarget"></span></div>
+<div class="hint" id="simNext" style="color:#9A9A9A"></div>
+<button type="button" class="sim-split" id="simSplit">Split</button>
+<div class="sim-actions"><button type="button" class="sim-ghost" id="simUndo">Undo split</button><button type="button" class="sim-ghost" id="simPause">Pause</button></div>
+<ol class="sim-log" id="simLog"></ol>
+</div>
+<dialog id="sheet" class="sheet"><div id="sheetBody"></div></dialog>
 <div class="toast" id="toast" hidden></div>
 <script>
 const TYPES=["Easy run","Intervals","Compromised","Strength","Simulation","SkiErg","Row","Other"];
 const TESTS=["1 km run","SkiErg 1000 m","Sled Push 50 m","Sled Pull 50 m","Burpee Broad Jump 80 m","Row 1000 m","Farmers Carry 200 m","Sandbag Lunges 100 m","Wall Balls 100","Full race","Half simulation"];
-const WHO=["Axel","Partner"];
+const WHO=["Axel","Noé"];
 const PHASES=[
 ["2026-09-15","2026-10-26","Base","Aerobic base, station technique, strength foundation"],
 ["2026-10-27","2026-12-07","Build","Race-pace running, heavier sleds, harder compromised work"],
@@ -408,7 +499,7 @@ const parseD=s=>{const[y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
 const fmtD=s=>parseD(s).toLocaleDateString(undefined,{month:"short",day:"numeric"});
 const fmtT=sec=>{sec=Math.round(sec);const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=String(sec%60).padStart(2,"0");return h?`${h}:${String(m).padStart(2,"0")}:${s}`:`${m}:${s}`};
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,1800)}
+function toast(msg,sticky){if(!sticky&&Date.now()<(toast.lock||0))return;const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.lock=sticky?Date.now()+3000:0;toast.h=setTimeout(()=>t.hidden=true,sticky?3400:1800)}
 function seg(el,opts,get,set){el.innerHTML="";opts.forEach(o=>{const b=document.createElement("button");b.type="button";b.textContent=o;b.setAttribute("aria-pressed",get()===o);b.onclick=()=>{set(o);[...el.children].forEach(c=>c.setAttribute("aria-pressed",c.textContent===o));render()};el.appendChild(b)})}
 function header(){
 const t=parseD(today());
@@ -448,11 +539,11 @@ $("bTable").innerHTML=rows||`<tr><td colspan="4" class="empty">No times yet. Log
 function recent(){
 const all=[...state.sessions.map(s=>({...s,kind:"session"})),...state.bench.map(b=>({...b,kind:"bench"})),...state.ergs.map(e=>({...e,kind:"erg"}))]
 .filter(x=>(x.athlete||"Axel")===state.who)
-.sort((a,b)=>a.date===b.date?(a.createdAt<b.createdAt?1:-1):(a.date<b.date?1:-1)).slice(0,15);
+.sort((a,b)=>a.date===b.date?((a.createdAt||"")<(b.createdAt||"")?1:-1):(a.date<b.date?1:-1)).slice(0,15);
 $("recent").innerHTML=all.length?all.map(x=>{
 const tag=x.kind==="session"?x.type:x.kind==="erg"?x.machine:"Test";
 const main=x.kind==="erg"?`${x.distance} m · <span class="num">${fmtT(x.seconds)}</span> · ${fmtT(x.seconds/x.distance*500)}/500`:x.kind==="session"?[x.km?`${x.km} km`:"",x.minutes?`${x.minutes} min`:""].filter(Boolean).join(" · ")||"Logged":`${esc(x.item)} · <span class="num">${fmtT(x.seconds)}</span>`;
-return `<div class="item"><span class="tag">${esc(tag)}</span><div><div>${main}</div><div class="meta">${fmtD(x.date)}${x.effort?" · Effort "+Number(x.effort):""}${x.soreness?" · Sore "+Number(x.soreness):""}${x.note?" · "+esc(x.note):""}</div></div><button class="del" aria-label="Delete entry" data-kind="${x.kind}" data-id="${esc(x.id)}">×</button></div>`}).join("")
+return `<div class="item${x.pending?" pending":""}"><span class="tag">${esc(tag)}</span><button type="button" class="item-main" data-edit="${x.kind}" data-id="${esc(x.id)}" aria-label="Edit entry"><div>${main}</div><div class="meta">${fmtD(x.date)}${x.effort?" · Effort "+Number(x.effort):""}${x.soreness?" · Sore "+Number(x.soreness):""}${x.note?" · "+esc(x.note):""}${x.pending?" · Waiting to sync":""}</div></button><button class="del" aria-label="Delete entry" data-kind="${x.kind}" data-id="${esc(x.id)}">×</button></div>`}).join("")
 :`<div class="empty">Nothing logged yet for ${esc(state.who)}. Your first session shows up here.</div>`;
 }
 function parseTime(v){v=String(v).trim().replace(/[\s,;]/g,".");let m=v.match(/^(\d{1,3})[:.]([0-5]\d)$/);if(m)return +m[1]*60+ +m[2];m=v.match(/^(\d{1,3})([0-5]\d)$/);if(m)return +m[1]*60+ +m[2];return null}
@@ -521,8 +612,8 @@ function getLevel(){try{const v=localStorage.getItem("hyrox-level");return LEVEL
 function setLevel(v){try{localStorage.setItem("hyrox-level",v)}catch(e){}}
 function getFocus(){try{return JSON.parse(localStorage.getItem("hyrox-focus")||"[]")}catch(e){return []}}
 function setFocus(a){try{localStorage.setItem("hyrox-focus",JSON.stringify(a))}catch(e){}}
-function stationBest(st){
-const who=state.who;let best=null;
+function stationBest(st,who=state.who){
+let best=null;
 state.bench.filter(b=>b.item===st.test&&(b.athlete||"Axel")===who).forEach(b=>{if(best==null||b.seconds<best)best=b.seconds});
 if(st.erg)state.ergs.filter(e=>e.machine===st.erg&&e.distance===1000&&(e.athlete||"Axel")===who).forEach(e=>{if(best==null||e.seconds<best)best=e.seconds});
 return best;
@@ -593,7 +684,7 @@ meta=[x.effort?"Effort "+Number(x.effort)+"/5":"",x.soreness?"Soreness "+Number(
 else if(x.kind==="erg"){tag=x.machine;const d=Number(x.distance),t=Number(x.seconds);
 main=`${d} m · <span class="num">${fmtT(t)}</span>`;meta=`${fmtT(t/d*500)}/500 m · 1000 m ${d===1000?"":"estimate "}${fmtT(d===1000?t:est1000(d,t))}`}
 else{tag="Test";main=`${esc(x.item)} · <span class="num">${fmtT(x.seconds)}</span>`}
-return `<div class="item nodel"><span class="tag">${esc(tag)}</span><div><div>${main}</div>${meta?`<div class="meta">${meta}</div>`:""}${x.note?`<div class="note">${esc(x.note)}</div>`:""}</div></div>`}).join("");
+return `<div class="item nodel"><span class="tag">${esc(tag)}</span><button type="button" class="item-main" data-edit="${x.kind}" data-id="${esc(x.id)}" aria-label="Edit entry"><div>${main}</div>${meta?`<div class="meta">${meta}</div>`:""}${x.note?`<div class="note">${esc(x.note)}</div>`:""}</button></div>`}).join("");
 }
 function monthRows(){
 const td=parseD(today());let rows="";
@@ -668,11 +759,136 @@ $("badgeGroups").innerHTML=groups.map(g=>`<section><h2>${g.name}</h2><div class=
 const p=b.date?`<span class="when">Earned ${fmtD(b.date)}</span>`:b.max?`<div class="bar"><i style="width:${Math.round((b.cur||0)/b.max*100)}%"></i></div><span class="prog">${b.cur||0} / ${b.max}</span>`:b.prog?`<span class="prog">${esc(b.prog)}</span>`:`<span class="prog">Locked</span>`;
 return `<div class="badge${b.date?" got":""}"><div class="medal">${BADGE_ICONS[g.name]}</div><b>${esc(b.name)}</b><p>${esc(b.desc)}</p>${p}</div>`}).join("")}</div></section>`).join("");
 }
-const PAGES={train:"pgTrain",calendar:"pgCal",badges:"pgBadges"};
+
+// ===== Race simulation =====
+const SIMK="hyrox-sim";
+function simGet(){try{return JSON.parse(localStorage.getItem(SIMK)||"null")}catch(e){return null}}
+function simPut(v){try{if(v)localStorage.setItem(SIMK,JSON.stringify(v));else localStorage.removeItem(SIMK)}catch(e){}}
+function simSegs(sim){const LV=LEVELS[sim.level]||LEVELS.Moderate,n=sim.mode==="half"?4:8,out=[];
+for(let i=0;i<n;i++){out.push({name:`Run ${i+1}`,spec:"1 km",t:LV.run,run:true});out.push({name:STATIONS[i].name,spec:STATIONS[i].spec,t:LV.st[i],st:i})}return out}
+const simEl=(sim,now)=>((sim.paused||now)-sim.start-(sim.pauseTotal||0));
+const simDurs=sim=>sim.splits.map((v,i)=>Math.round((v-(i?sim.splits[i-1]:0))/1000));
+let simTimer=null,wake=null;
+async function keepAwake(on){try{if(on&&"wakeLock" in navigator){wake=await navigator.wakeLock.request("screen")}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
+function simSection(){
+state.simMode=state.simMode||"full";
+seg($("simMode"),["Full race","Half race"],()=>state.simMode==="full"?"Full race":"Half race",v=>state.simMode=v==="Full race"?"full":"half");
+const L=getLevel(),LV=LEVELS[L],segs=simSegs({mode:state.simMode,level:L}),tot=segs.reduce((a,x)=>a+x.t,0);
+$("simHint").textContent=`${state.simMode==="full"?"8 runs + 8 stations":"4 runs + first 4 stations"} · ${L} target ${fmtT(tot)}. Tap Split as you finish each run and station. Roxzone time counts in the runs.`;
+const sims=state.bench.filter(b=>isMine(b)&&(b.item==="Full race"||b.item==="Half simulation")).sort((a,b)=>a.date<b.date?1:-1).slice(0,6);
+$("simHistory").innerHTML=sims.length?`<div class="eyebrow" style="margin-top:4px">Past simulations</div>`+sims.map(b=>{const t=simSegs({mode:b.item==="Full race"?"full":"half",level:L}).reduce((a,x)=>a+x.t,0),dl=b.seconds-t;
+return `<div class="item nodel"><span class="tag">${b.item==="Full race"?"Full":"Half"}</span><button type="button" class="item-main" data-sim="${esc(b.id)}"><div><span class="num">${fmtT(b.seconds)}</span> <span class="${dl<=0?"delta-ok":"delta-bad"}">${dl<=0?"−":"+"}${fmtT(Math.abs(dl))}</span></div><div class="meta">${fmtD(b.date)} · vs ${L} target${b.splits&&b.splits.length?" · tap for splits":""}</div></button></div>`}).join(""):"";
+}
+function simOpen(){const sim=simGet();if(!sim)return;$("sim").hidden=false;document.body.style.overflow="hidden";keepAwake(true);clearInterval(simTimer);simTimer=setInterval(simTick,250);simTick()}
+function simClose(){$("sim").hidden=true;document.body.style.overflow="";keepAwake(false);clearInterval(simTimer)}
+function simTick(){const sim=simGet();if(!sim){simClose();return}
+const segs=simSegs(sim),now=Date.now(),el=simEl(sim,now),i=sim.splits.length,cur=segs[i],last=i?sim.splits[i-1]:0;
+$("simLevel").textContent=`${sim.mode==="half"?"Half":"Full"} race · ${sim.level} targets${sim.paused?" · Paused":""}`;
+$("simTotal").textContent=fmtT(el/1000);
+const doneT=segs.slice(0,i).reduce((a,x)=>a+x.t,0),dl=i?Math.round(last/1000)-doneT:0;
+$("simProj").innerHTML=i?`<span class="${dl<=0?"good-t":"bad-t"}">${dl<=0?"−":"+"}${fmtT(Math.abs(dl))}</span> vs target after ${i} of ${segs.length}`:"";
+if(cur){$("simStep").textContent=`${cur.run?"Run":"Station"} · ${i+1} of ${segs.length}`;$("simName").textContent=cur.name;
+const st=(el-last)/1000;$("simSegTime").textContent=fmtT(st);$("simSegTime").className="sim-segtime num"+(st>cur.t?" bad-t":"");
+$("simTarget").textContent=`${cur.spec} · target ${fmtT(cur.t)}`;const nx=segs[i+1];$("simNext").textContent=nx?`Next: ${nx.name}`:"Last one. Finish strong";}
+$("simPause").textContent=sim.paused?"Resume":"Pause";$("simUndo").disabled=!i;$("simSplit").disabled=!!sim.paused;
+const durs=simDurs(sim);$("simLog").innerHTML=durs.map((d,k)=>{const x=d-segs[k].t;return `<li><span>${esc(segs[k].name)}</span><span>${fmtT(d)} <span class="${x<=0?"good-t":"bad-t"}">${x<0?"−":x>0?"+":"±"}${fmtT(Math.abs(x))}</span></span></li>`}).reverse().join("");
+}
+function simSummary(sim){
+const segs=simSegs(sim),durs=simDurs(sim),n=durs.length,complete=n===segs.length,total=durs.reduce((a,b)=>a+b,0),tgt=segs.slice(0,n).reduce((a,x)=>a+x.t,0),dl=total-tgt;
+const rows=durs.map((d,k)=>{const x=d-segs[k].t;return `<tr><td>${esc(segs[k].name)}</td><td class="r num">${fmtT(d)}</td><td class="r num">${fmtT(segs[k].t)}</td><td class="r num"><span class="${x<=0?"delta-ok":"delta-bad"}">${x<0?"−":x>0?"+":"±"}${fmtT(Math.abs(x))}</span></td></tr>`}).join("");
+const stations=segs.slice(0,n).filter(x=>!x.run).length;
+openSheet(sheetHead(complete?"Simulation done":"Save partial simulation")+`<div class="board"><div><span class="eyebrow">Total</span><span class="big num">${fmtT(total)}</span></div><div><span class="eyebrow">vs ${esc(sim.level)} target</span><span class="big num ${dl<=0?"delta-ok":"delta-bad"}">${dl<=0?"−":"+"}${fmtT(Math.abs(dl))}</span></div></div>
+${n?`<table><thead><tr><th>Split</th><th class="r">Time</th><th class="r">Target</th><th class="r">±</th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="empty">No splits yet.</div>`}
+<form id="simSave" style="gap:10px">${stations?`<label class="check"><input type="checkbox" id="simBench" checked> Save my ${stations} station ${stations===1?"time":"times"} as benchmarks</label>`:""}
+<label>Effort<select id="simEffort"><option value="0">-</option><option>3</option><option>4</option><option selected>5</option></select></label>
+<button class="primary" type="submit"${n?"":" disabled"}>Save to my log</button><button type="button" class="ghost" id="simBack">Back to timer</button><button type="button" class="danger" id="simDiscard">Discard</button></form>`);
+$("simBack").onclick=()=>{if(complete){sim.splits.pop();simPut(sim)}closeSheet();simOpen()};
+$("simDiscard").onclick=()=>{simPut(null);closeSheet();simClose();render();toast("Simulation discarded")};
+$("simSave").onsubmit=async e=>{e.preventDefault();const date=today(),runs=segs.slice(0,n).filter(x=>x.run).length,label=complete?(sim.mode==="full"?"Full race":"Half simulation"):"Partial simulation";
+let ok=await add("sessions",{date,type:"Simulation",km:runs,minutes:Math.max(1,Math.round(total/60)),effort:+$("simEffort").value||0,soreness:0,note:`${label} ${fmtT(total)} (${dl<=0?"−":"+"}${fmtT(Math.abs(dl))} vs ${sim.level})`});
+if(!ok)return;
+if(complete)ok=await add("benchmarks",{date,item:sim.mode==="full"?"Full race":"Half simulation",seconds:total,splits:durs,note:`Simulation · ${sim.level} targets`});
+if(ok&&$("simBench")&&$("simBench").checked){for(let k=0;k<n;k++){const x=segs[k];if(!x.run&&durs[k]>=20)await add("benchmarks",{date,item:STATIONS[x.st].test,seconds:durs[k],note:"From race simulation"})}}
+simPut(null);closeSheet();simClose();render();toast("Simulation saved",true)};
+}
+function simSplitsSheet(id){const b=state.bench.find(x=>x.id===id);if(!b)return;
+const segs=simSegs({mode:b.item==="Full race"?"full":"half",level:getLevel()});
+const rows=(b.splits||[]).map((d,k)=>segs[k]?`<tr><td>${esc(segs[k].name)}</td><td class="r num">${fmtT(d)}</td><td class="r num">${fmtT(segs[k].t)}</td></tr>`:"").join("");
+openSheet(sheetHead(`${esc(b.item)} · ${fmtD(b.date)}`)+`<div class="big num" style="font:800 40px var(--display)">${fmtT(b.seconds)}</div>${rows?`<table><thead><tr><th>Split</th><th class="r">Time</th><th class="r">${esc(getLevel())}</th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="empty">No splits saved for this one.</div>`}<button type="button" class="ghost" data-editbench="${esc(b.id)}">Edit or delete</button>`)}
+// ===== Weak stations =====
+function weakStations(){
+const L=getLevel(),LV=LEVELS[L];
+const rows=STATIONS.map((st,i)=>({name:st.name,best:stationBest(st),t:LV.st[i],station:true}));
+let runBest=null;state.bench.filter(x=>x.item==="1 km run"&&isMine(x)).forEach(x=>{if(runBest==null||x.seconds<runBest)runBest=x.seconds});
+rows.push({name:"1 km run",best:runBest,t:LV.run});
+const tested=rows.filter(r=>r.best!=null).map(r=>({...r,gap:(r.best-r.t)/r.t})).sort((a,b)=>b.gap-a.gap),untested=rows.filter(r=>r.best==null);
+$("weakList").innerHTML=tested.length?tested.map((r,k)=>{const d=r.best-r.t;return `<div class="item nodel"><span class="rank">${k+1}</span><div><div><b>${esc(r.name)}</b></div><div class="meta">Best ${fmtT(r.best)} · ${L} target ${fmtT(r.t)}</div></div><span class="chip ${d<=0?"ok":"warn"}" style="justify-self:end">${d<=0?"On target":"+"+fmtT(d)+" · "+Math.round(r.gap*100)+"%"}</span></div>`}).join(""):`<div class="empty">No station times yet. Log station benchmarks or run a simulation to find your weak spots.</div>`;
+$("weakList").querySelectorAll(".item").forEach(el=>el.style.gridTemplateColumns="auto 1fr auto");
+$("weakHint").textContent=untested.length?`Not tested yet: ${untested.map(r=>r.name).join(", ")}`:"All stations tested. Ranked by how far each is from target.";
+$("weakFocus").disabled=!tested.some(r=>r.station&&r.gap>0);
+}
+// ===== Doubles plan =====
+function doublesPlan(){
+$("dblList").innerHTML=STATIONS.map(st=>{const a=stationBest(st,"Axel"),n=stationBest(st,"Noé"),cur=(state.doubles.find(x=>x.station===st.name)||{}).lead||"";
+let tip="No times yet";if(a!=null&&n!=null){const d=a-n;tip=d===0?"Even":`${d<0?"Axel":"Noé"} faster by ${fmtT(Math.abs(d))}`}else if(a!=null)tip=`Axel ${fmtT(a)} · Noé not tested`;else if(n!=null)tip=`Noé ${fmtT(n)} · Axel not tested`;
+if(a!=null&&n!=null)tip=`Axel ${fmtT(a)} · Noé ${fmtT(n)} · ${tip}`;
+return `<div class="dbl"><div class="dbl-top"><b>${esc(st.name)}</b><span class="hint">${esc(tip)}</span></div><div class="seg" role="group" aria-label="${esc(st.name)} lead">${["Axel","Noé","Split"].map(o=>`<button type="button" data-dbl="${esc(st.name)}" data-lead="${o}" aria-pressed="${cur===o}">${o==="Split"?"Split it":o+" leads"}</button>`).join("")}</div></div>`}).join("");
+}
+// ===== Week: plan vs done =====
+function weekPlan(){
+const off=state.weekOff||0,td=today(),mon=addDays(ymd(weekStart(td)),7*off);
+$("wkTitle").textContent=off===0?"This week":off===-1?"Last week":`Week of ${fmtD(mon)}`;$("wkNext").disabled=off>=1;
+let planned=0,done=0,days=0,h="";
+for(let k=0;k<7;k++){const d=addDays(mon,k),pl=planFor(d),items=dayEntries(d),logged=items.length>0,types=[...new Set(items.map(x=>x.kind==="session"?x.type:x.kind==="erg"?x.machine:"Test"))];
+if(logged&&d<=td)days++;
+let chip,cls="chip";
+if(pl.type){if(d<td||(d===td&&logged)){planned++;if(logged)done++}}
+if(logged){chip="Done";cls="chip ok"}else if(!pl.type){chip="Rest"}else if(d<td){chip="Missed";cls="chip warn"}else if(d===td){chip="Today";cls="chip key"}else chip="Upcoming";
+h+=`<button type="button" class="wk-row${d===td?" today":""}" data-wk="${d}"><span class="wk-day">${parseD(d).toLocaleDateString(undefined,{weekday:"short"})}<small>${fmtD(d)}</small></span><span><div>${esc(pl.title||"Rest")}${pl.key?" · key":""}</div>${logged?`<div class="meta">Logged: ${esc(types.join(", "))}</div>`:""}</span><span class="${cls}">${chip}</span></button>`}
+$("wkList").innerHTML=h;
+const pct=planned?Math.round(done/planned*100):null;
+$("wkSum").textContent=`${done} of ${planned} planned sessions done · ${days} training ${days===1?"day":"days"}`;
+$("wkPct").textContent=pct==null?"No plan due yet":pct+"% of plan";$("wkPct").className="chip"+(pct==null?"":pct>=80?" ok":pct<50?" warn":"");
+}
+// ===== Weekly recap card =====
+async function recapCard(){
+const off=state.weekOff||0,td=today(),mon=addDays(ymd(weekStart(td)),7*off),sun=addDays(mon,6),inWk=d=>d>=mon&&d<=sun;
+const S=state.sessions.filter(x=>isMine(x)&&inWk(x.date)),E=state.ergs.filter(x=>isMine(x)&&inWk(x.date)),B=state.bench.filter(x=>isMine(x)&&inWk(x.date));
+const days=trainingDates().filter(inWk).length,mins=S.reduce((a,x)=>a+(+x.minutes||0),0),km=S.reduce((a,x)=>a+(+x.km||0),0),em=E.reduce((a,x)=>a+(+x.distance||0),0);
+const st=streaks(trainingDates().filter(d=>d<=(sun<td?sun:td)));
+const bestIn=m=>{const p=ergPoints(m).filter(x=>inWk(x.date));return p.length?Math.min(...p.map(x=>x.v)):null};
+const badges=badgeGroups().flatMap(g=>g.items).filter(b=>b.date&&inWk(b.date)).map(b=>b.name);
+const toVer=Math.max(0,dayGap(td,"2027-01-28"));
+const c=document.createElement("canvas");c.width=1080;c.height=1920;const x=c.getContext("2d");
+try{await Promise.all(['800 200px "Barlow Condensed"','600 40px "IBM Plex Sans"','500 40px "JetBrains Mono"'].map(f=>document.fonts.load(f)))}catch(e){}
+const Y="#FFE600",K="#0A0A0A",G="#9A9A9A",D='"Barlow Condensed","Arial Narrow",sans-serif',P='"IBM Plex Sans",system-ui,sans-serif',M='"JetBrains Mono",monospace';
+x.fillStyle=K;x.fillRect(0,0,1080,1920);
+x.fillStyle=G;x.font=`600 34px ${P}`;x.fillText(`HYROX TRAINING · ${fmtD(mon).toUpperCase()} - ${fmtD(sun).toUpperCase()}`,80,150);
+x.fillStyle="#fff";x.font=`800 150px ${D}`;x.fillText(state.who.toUpperCase(),80,300);
+x.fillStyle=Y;x.fillRect(80,360,920,440);
+x.fillStyle=K;x.font=`800 300px ${D}`;x.fillText(`${days}/7`,120,680);x.font=`700 56px ${D}`;x.fillText("TRAINING DAYS",130,760);
+{let planned=0,done=0;for(let k=0;k<7;k++){const d=addDays(mon,k),pl=planFor(d),lg=dayEntries(d).length>0;if(pl.type&&(d<td||(d===td&&lg))){planned++;if(lg)done++}}
+if(planned){x.textAlign="right";x.font=`800 150px ${D}`;x.fillText(Math.round(done/planned*100)+"%",960,560);x.font=`700 44px ${D}`;x.fillText("OF PLAN DONE",960,620);x.textAlign="left"}}
+const box=(bx,by,label,val)=>{x.strokeStyle="#2A2A2A";x.lineWidth=3;x.strokeRect(bx,by,445,230);x.fillStyle=G;x.font=`600 30px ${P}`;x.fillText(label,bx+34,by+66);x.fillStyle="#fff";x.font=`800 110px ${D}`;x.fillText(val,bx+34,by+190)};
+box(80,850,"SESSIONS",String(S.length+E.length+B.length));box(555,850,"MINUTES",String(mins));
+box(80,1110,"HOT STREAK",`${st.cur} ${st.cur===1?"DAY":"DAYS"}`);box(555,1110,em?"ERG METERS":"RUN KM",em?em.toLocaleString():String(Math.round(km*10)/10));
+let y=1440;x.font=`500 38px ${M}`;
+[["SkiErg",bestIn("SkiErg")],["Row",bestIn("Row")]].forEach(([m,v])=>{if(v!=null){x.fillStyle=G;x.fillText(`${m} best 1000 m`,80,y);x.fillStyle="#fff";x.textAlign="right";x.fillText(fmtT(v),1000,y);x.textAlign="left";y+=62}});
+if(badges.length){x.fillStyle=Y;x.font=`700 44px ${D}`;const words=("NEW BADGES: "+badges.join(", ")).toUpperCase().split(" ");let line="",lines=[];
+for(const w of words){const t=line?line+" "+w:w;if(x.measureText(t).width>920&&line){lines.push(line);line=w}else line=t}if(line)lines.push(line);
+const shown=lines.slice(0,2);if(lines.length>2){let l=shown[1];while(x.measureText(l+" …").width>920&&l.includes(" "))l=l.slice(0,l.lastIndexOf(" "));shown[1]=l+" …"}shown.forEach((l,k)=>x.fillText(l,80,y+10+k*56))}
+x.fillStyle=Y;x.font=`800 96px ${D}`;x.fillText(`${toVer} DAYS TO VERONA`,80,1760);
+x.fillStyle=G;x.font=`500 32px ${M}`;x.fillText("hyrox-app-nine.vercel.app",80,1840);
+const blob=await new Promise(r=>c.toBlob(r,"image/png"));const url=URL.createObjectURL(blob),file=new File([blob],`hyrox-week-${mon}.png`,{type:"image/png"});
+openSheet(sheetHead("Weekly recap")+`<img class="recap-img" src="${url}" alt="Weekly recap card for ${esc(state.who)}, ${fmtD(mon)} to ${fmtD(sun)}"><button type="button" class="primary" id="recapShare">Share</button><a class="ghost" style="text-align:center;text-decoration:none" href="${url}" download="hyrox-week-${mon}.png">Download image</a>`);
+$("recapShare").onclick=async()=>{try{if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:"My HYROX week"});else{const a=document.createElement("a");a.href=url;a.download=file.name;a.click()}}catch(e){}};
+}
+function racePage(){simSection();weakStations();raceMap();doublesPlan()}
+const PAGES={train:"pgTrain",race:"pgRace",calendar:"pgCal",badges:"pgBadges"};
 function showPage(pg){if(!PAGES[pg])pg="train";Object.entries(PAGES).forEach(([k,id])=>$(id).hidden=k!==pg);
 document.querySelectorAll(".tabbar button").forEach(b=>{if(b.dataset.pg===pg)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
 try{history.replaceState(null,"","#"+pg)}catch(e){}window.scrollTo(0,0)}
-function render(){todayCard();raceMap();loadCheck();ergCards();chart();benchTable();recent();calPage();badgesPage()}
+function render(){todayCard();loadCheck();ergCards();chart();benchTable();recent();racePage();calPage();weekPlan();badgesPage()}
 function growNote(){const t=$("sNote");if(!t)return;t.style.height="auto";t.style.height=Math.max(84,t.scrollHeight+2)+"px"}
 function isErgType(){return MACHINES.includes(state.type)}
 function syncErg(){const on=isErgType();$("sErgRow").hidden=!on;$("sErgHint").hidden=!on;$("sKmWrap").hidden=on}
@@ -682,36 +898,101 @@ document.addEventListener("input",e=>{const id=e.target&&e.target.id;if(id==="sN
 // storage: server (Vercel Blob via /api/data) with a local cache for instant load
 const LS="roxlog-v1";
 let db=null, local=false;
-function lsSave(){try{localStorage.setItem(LS,JSON.stringify({s:state.sessions,b:state.bench,e:state.ergs}))}catch(e){}}
-function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");state.sessions=d.s||[];state.bench=d.b||[];state.ergs=d.e||[]}catch(e){}}
+function norm(a){(a||[]).forEach(x=>{if(x&&x.athlete==="Partner")x.athlete="Noé"});return a||[]}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify({s:state.sessions.filter(x=>!x.pending),b:state.bench.filter(x=>!x.pending),e:state.ergs.filter(x=>!x.pending),d:state.doubles.filter(x=>!x.pending)}))}catch(e){}}
+function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");state.sessions=norm(d.s);state.bench=norm(d.b);state.ergs=norm(d.e);state.doubles=d.d||[];qLoad().forEach(applyLocal)}catch(e){}}
 function getPass(){try{return localStorage.getItem("hyrox-pass")||""}catch(e){return ""}}
+function getUser(){try{return localStorage.getItem("hyrox-user")||""}catch(e){return ""}}
+function setAuth(pass,user){try{if(pass){localStorage.setItem("hyrox-pass",pass);localStorage.setItem("hyrox-user",user)}else{localStorage.removeItem("hyrox-pass");localStorage.removeItem("hyrox-user")}}catch(e){}acctBtn()}
+function acctBtn(){const u=getUser(),b=$("acct");b.textContent=u?`Signed in · ${u}`:"Sign in";b.className="chip acct"+(u?" ok":"")}
 async function api(path,body){
-const go=p=>fetch(path,{method:body?"POST":"GET",headers:{"content-type":"application/json","x-app-pass":p},body:body?JSON.stringify(body):undefined});
-let r=await go(getPass());
-if(r.status===401){const p=window.prompt("Enter your app passcode");if(!p)throw{code:"not_granted",status:401};try{localStorage.setItem("hyrox-pass",p)}catch(e){}r=await go(p)}
-if(r.status===401)throw{code:"not_granted",status:401};
-if(r.status===429)throw{code:"rate_limited",status:429};
+let r;
+try{r=await fetch(path,{method:body?"POST":"GET",headers:{"content-type":"application/json","x-app-pass":getPass()},body:body?JSON.stringify(body):undefined})}catch(e){throw{code:"network"}}
+if(r.status===401){if(body){setAuth("","");openSignIn("Sign in to save changes.")}throw{code:"not_granted",status:401,message:"Sign in to save"}}
 if(!r.ok){let m="";try{m=(await r.json()).error}catch(e){}throw{code:"error",status:r.status,message:m}}
 return r.json();
 }
-function applyData(d){state.sessions=d.sessions||[];state.bench=d.benchmarks||[];state.ergs=d.ergs||[];lsSave();render();
+// offline queue: changes made without signal are kept on the phone and sent later
+const QK="hyrox-queue",COLKEY={sessions:"sessions",benchmarks:"bench",ergs:"ergs",doubles:"doubles"};
+function qLoad(){try{return JSON.parse(localStorage.getItem(QK)||"[]")}catch(e){return []}}
+function qSave(q){try{localStorage.setItem(QK,JSON.stringify(q))}catch(e){}}
+function applyLocal(op){const k=COLKEY[op.col];if(!k)return;let arr=state[k]||[];
+if(op.op==="add"){if(op.col==="doubles")arr=arr.filter(x=>x.station!==op.item.station);arr=arr.concat({...op.item,id:"local-"+op.item.cid,pending:true})}
+else if(op.op==="update")arr=arr.map(x=>x.id===op.id?{...x,...op.item,pending:true}:x);
+else if(op.op==="delete")arr=arr.filter(x=>x.id!==op.id);
+state[k]=arr}
+function queueStatus(){const n=qLoad().length;if(n)$("status").textContent=`Offline · ${n} waiting to sync`}
+function enqueue(op){const q=qLoad(),lid=String(op.id||"");
+if(lid.startsWith("local-")&&op.op==="delete"){qSave(q.filter(x=>!(x.op==="add"&&x.item.cid===lid.slice(6))))}
+else if(lid.startsWith("local-")&&op.op==="update"){q.forEach(x=>{if(x.op==="add"&&x.item.cid===lid.slice(6))Object.assign(x.item,op.item)});qSave(q)}
+else{q.push(op);qSave(q)}
+applyLocal(op);lsSave();render();queueStatus()}
+async function send(op){
+if(String(op.id||"").startsWith("local-")){enqueue(op);flushQueue();return true}
+if(navigator.onLine===false){enqueue(op);toast("No connection. Saved on this phone, it syncs when you're back online",true);return true}
+try{applyData(await api("/api/data",op));$("status").textContent="Synced";return true}
+catch(e){if(e.code==="network"){enqueue(op);toast("No connection. Saved on this phone, it syncs when you're back online",true);return true}
+if(e.code!=="not_granted")toast(e.message||"Couldn't save. Try again.",true);return false}
+}
+let flushing=false;
+async function flushQueue(){
+if(flushing||!qLoad().length)return;flushing=true;let last=null;
+try{while(qLoad().length){const op=qLoad()[0];
+try{last=await api("/api/data",op)}catch(e){if(e.code==="network"||e.code==="not_granted")break;toast("An offline entry couldn't sync: "+(e.message||"error"),true)}
+qSave(qLoad().slice(1))}}
+finally{flushing=false}
+if(last)applyData(last);if(qLoad().length)queueStatus()}
+function applyData(d){state.sessions=norm(d.sessions);state.bench=norm(d.benchmarks);state.ergs=norm(d.ergs);state.doubles=d.doubles||[];qLoad().forEach(applyLocal);lsSave();render();
 state.earned=state.earned||{};const now=earnedIds(),prev=state.earned[state.who];state.earned[state.who]=new Set(now);
-if(prev){const fresh=badgeGroups().flatMap(g=>g.items).filter(b=>b.date&&!prev.has(b.id)).map(b=>b.name);if(fresh.length)setTimeout(()=>toast("Badge unlocked: "+fresh.join(", ")),1900)}}
+if(prev){const fresh=badgeGroups().flatMap(g=>g.items).filter(b=>b.date&&!prev.has(b.id)).map(b=>b.name);if(fresh.length)setTimeout(()=>toast("Badge unlocked: "+fresh.join(", "),true),1900)}}
 async function sync(){
-try{applyData(await api("/api/data"));$("status").textContent="Synced"}
-catch(e){$("status").textContent=e.status===401?"Passcode needed":(e.message||"Offline: showing saved copy")}
+await flushQueue();
+try{applyData(await api("/api/data"));if(!qLoad().length)$("status").textContent="Synced";else queueStatus()}
+catch(e){$("status").textContent=qLoad().length?`Offline · ${qLoad().length} waiting to sync`:"Offline: showing saved copy"}
 }
-async function add(col,data){
-data.createdAt=new Date().toISOString();data.athlete=state.who;
-try{applyData(await api("/api/data",{op:"add",col,item:data}));$("status").textContent="Synced";return true}
-catch(e){toast(e.message||"Couldn't save. Check your connection and try again.");return false}
+async function add(col,data){data.createdAt=new Date().toISOString();if(col!=="doubles")data.athlete=data.athlete||state.who;data.cid=Date.now().toString(36)+Math.random().toString(36).slice(2,8);return send({op:"add",col,item:data})}
+async function update(col,id,item){return send({op:"update",col,id,item})}
+const colOf=kind=>kind==="session"?"sessions":kind==="erg"?"ergs":"benchmarks";
+async function remove(kind,id){return send({op:"delete",col:colOf(kind),id})}
+// sheet (bottom panel)
+function openSheet(html){const d=$("sheet");$("sheetBody").innerHTML=html;if(!d.open){try{d.showModal()}catch(e){d.setAttribute("open","")}}return $("sheetBody")}
+function closeSheet(){const d=$("sheet");try{d.close()}catch(e){}d.removeAttribute("open")}
+const sheetHead=t=>`<div class="sheet-head"><h2>${t}</h2><button type="button" class="sheet-x" data-close aria-label="Close">×</button></div>`;
+function openSignIn(msg){
+const u=getUser();
+if(u&&!msg){openSheet(sheetHead("Account")+`<div>Signed in as <b>${esc(u)}</b> on this phone.</div><div class="hint">${u==="Axel"?"You can edit everyone's entries.":"You can add and edit your own entries and the doubles plan."}</div><button type="button" class="danger" id="signOut">Sign out</button>`);
+$("signOut").onclick=()=>{setAuth("","");closeSheet();toast("Signed out")};return}
+openSheet(sheetHead("Sign in")+`<form id="signForm" style="gap:10px"><div class="hint">${esc(msg||"Enter your passcode. Axel and Noé each have their own.")}</div><label>Passcode<input type="password" id="sgPass" autocomplete="current-password" required></label><div class="err" id="sgErr"></div><button class="primary" type="submit">Sign in</button></form>`);
+setTimeout(()=>{try{$("sgPass").focus()}catch(e){}},100);
+$("signForm").onsubmit=async e=>{e.preventDefault();const p=$("sgPass").value;
+if(/[^\x20-\x7E]/.test(p)){$("sgErr").textContent="Passcodes can't contain accents or emoji.";return}
+$("sgErr").textContent="Checking…";
+try{const r=await fetch("/api/data",{method:"POST",headers:{"content-type":"application/json","x-app-pass":p},body:JSON.stringify({op:"whoami"})});
+if(r.status===401){$("sgErr").textContent="Wrong passcode.";return}
+if(!r.ok){$("sgErr").textContent="Something went wrong. Try again.";return}
+const j=await r.json();setAuth(p,j.user);state.who=j.user;seg($("who"),WHO,()=>state.who,v=>state.who=v);closeSheet();render();toast(`Signed in as ${j.user}`);flushQueue()}
+catch(err){$("sgErr").textContent="No connection. Try again when you have signal."}};
 }
-async function remove(kind,id){
-const col=kind==="session"?"sessions":kind==="erg"?"ergs":"benchmarks";
-try{applyData(await api("/api/data",{op:"delete",col,id}))}catch(e){toast("Couldn't delete. Try again.")}
+// edit entries
+function openEdit(kind,id){
+const k=kind==="session"?"sessions":kind==="erg"?"ergs":"bench",x=(state[k]||[]).find(e=>e.id===id);if(!x)return;
+const opts=(arr,v)=>arr.map(o=>{const[val,lab]=Array.isArray(o)?o:[o,o];return `<option value="${esc(val)}"${String(val)===String(v)?" selected":""}>${esc(lab)}</option>`}).join("");
+const sc=[["0","-"],"1","2","3","4","5"];
+let f=`<label>Date<input type="date" name="date" value="${esc(x.date)}" required></label>`;
+if(kind==="session")f+=`<label>Type<select name="type">${opts(TYPES,x.type)}</select></label><div class="row"><label>Run km<input name="km" inputmode="decimal" value="${x.km||""}"></label><label>Minutes<input name="minutes" inputmode="numeric" value="${x.minutes||""}"></label></div><div class="row"><label>Effort<select name="effort">${opts(sc,x.effort||0)}</select></label><label>Soreness<select name="soreness">${opts(sc,x.soreness||0)}</select></label></div><label>Notes<textarea name="note" rows="3">${esc(x.note||"")}</textarea></label>`;
+else if(kind==="erg")f+=`<label>Machine<select name="machine">${opts(MACHINES,x.machine)}</select></label><div class="row"><label>Distance (m)<input name="distance" inputmode="numeric" value="${x.distance}"></label><label>Time<input name="time" inputmode="decimal" value="${fmtT(x.seconds)}"></label></div>`;
+else f+=`<label>Test<select name="item">${opts(TESTS,x.item)}</select></label><label>Time<input name="time" inputmode="decimal" value="${fmtT(x.seconds)}"></label>${x.note?`<label>Note<input name="note" value="${esc(x.note)}"></label>`:""}`;
+const name=kind==="session"?x.type:kind==="erg"?x.machine:x.item;
+openSheet(sheetHead("Edit "+esc(name))+`<form id="editForm" style="gap:12px">${f}<div class="err" id="edErr"></div><button class="primary" type="submit">Save changes</button><button type="button" class="danger" id="edDel">Delete entry</button></form>`);
+$("editForm").onsubmit=async e=>{e.preventDefault();const F=new FormData(e.target),g=n=>String(F.get(n)??"").trim(),ch={date:g("date")};
+if(kind==="session"){ch.type=g("type");ch.km=parseFloat(g("km"))||0;ch.minutes=parseInt(g("minutes"))||0;ch.effort=+g("effort")||0;ch.soreness=+g("soreness")||0;ch.note=g("note")}
+else{const t=parseTime(g("time"));if(!t){$("edErr").textContent="Enter a time like 4.15 (= 4:15)";return}ch.seconds=t;
+if(kind==="erg"){ch.machine=g("machine");ch.distance=parseDist(g("distance"));if(!(ch.distance>=100)){$("edErr").textContent="Enter a distance of at least 100 m";return}}
+else{ch.item=g("item");if(F.has("note"))ch.note=g("note")}}
+if(await update(colOf(kind),id,ch)){closeSheet();toast("Changes saved")}};
+$("edDel").onclick=async()=>{if(await remove(kind,id)){closeSheet();toast("Entry deleted")}};
 }
 // forms
-seg($("who"),WHO,()=>state.who,v=>state.who=v);
 seg($("types"),TYPES,()=>state.type,v=>{state.type=v;syncErg()});
 function scaleSeg(el,key){el.innerHTML="";["1","2","3","4","5"].forEach(o=>{const b=document.createElement("button");b.type="button";b.textContent=o;b.setAttribute("aria-pressed",String(state[key])===o);
 b.onclick=()=>{state[key]=String(state[key])===o?0:+o;[...el.children].forEach(c=>c.setAttribute("aria-pressed",String(state[key])===c.textContent))};el.appendChild(b)})}
@@ -735,7 +1016,7 @@ const ok=await add("benchmarks",{date:$("bDate").value,item:$("bItem").value,sec
 if(ok){$("bTime").value="";toast("Time saved")}};
 $("lvl").onclick=e=>{const b=e.target.closest("[data-lvl]");if(!b)return;setLevel(b.dataset.lvl);render()};
 $("course").onclick=e=>{const b=e.target.closest("[data-focus]");if(!b)return;const n=b.dataset.focus;let f=getFocus();f=f.includes(n)?f.filter(x=>x!==n):f.concat(n);setFocus(f);raceMap()};
-$("recent").onclick=e=>{const b=e.target.closest(".del");if(b)remove(b.dataset.kind,b.dataset.id)};
+$("recent").onclick=e=>{const d=e.target.closest(".del");if(d){remove(d.dataset.kind,d.dataset.id);return}const b=e.target.closest("[data-edit]");if(b)openEdit(b.dataset.edit,b.dataset.id)};
 seg($("ergMachine"),MACHINES,()=>state.machine,v=>state.machine=v);
 $("eDate").value=today();
 function ergPaceHint(){const d=parseDist($("eDist").value),t=parseTime($("eTime").value);$("ePace").textContent=d>0&&t?`Pace ${fmtT(t/d*500)}/500 m · 1000 m ${d===1000?"":"estimate "}${fmtT(d===1000?t:est1000(d,t))}`:""}
@@ -754,6 +1035,27 @@ document.querySelector(".tabbar").onclick=e=>{const b=e.target.closest("[data-pg
 $("calPrev").onclick=()=>{const[y,m]=state.calMonth.split("-").map(Number);state.calMonth=ymd(new Date(y,m-2,1)).slice(0,7);calPage()};
 $("calNext").onclick=()=>{const[y,m]=state.calMonth.split("-").map(Number);state.calMonth=ymd(new Date(y,m,1)).slice(0,7);calPage()};
 $("calGrid").onclick=e=>{const b=e.target.closest("[data-day]");if(!b)return;state.calDay=b.dataset.day;calPage();$("dayTitle").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"})};
+state.who=WHO.includes(getUser())?getUser():"Axel";state.doubles=state.doubles||[];
+seg($("who"),WHO,()=>state.who,v=>state.who=v);acctBtn();
+$("acct").onclick=()=>openSignIn();
+$("sheet").addEventListener("click",e=>{if(e.target.id==="sheet"||e.target.closest("[data-close]"))closeSheet();const eb=e.target.closest("[data-editbench]");if(eb){openEdit("bench",eb.dataset.editbench)}});
+$("dayDetail").onclick=e=>{const b=e.target.closest("[data-edit]");if(b)openEdit(b.dataset.edit,b.dataset.id)};
+$("simStart").onclick=()=>{simPut({mode:state.simMode||"full",level:getLevel(),start:Date.now(),splits:[],paused:null,pauseTotal:0});simOpen()};
+$("simSplit").onclick=()=>{const sim=simGet();if(!sim||sim.paused)return;const el=simEl(sim,Date.now()),prev=sim.splits.length?sim.splits[sim.splits.length-1]:0;if(el-prev<3000){toast("Double tap ignored");return}sim.splits.push(el);simPut(sim);try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
+if(sim.splits.length===simSegs(sim).length){clearInterval(simTimer);simTick();simSummary(sim)}else simTick()};
+$("simUndo").onclick=()=>{const sim=simGet();if(!sim||!sim.splits.length)return;sim.splits.pop();simPut(sim);simTick()};
+$("simPause").onclick=()=>{const sim=simGet();if(!sim)return;const now=Date.now();if(sim.paused){sim.pauseTotal=(sim.pauseTotal||0)+now-sim.paused;sim.paused=null}else sim.paused=now;simPut(sim);simTick()};
+$("simEnd").onclick=()=>{const sim=simGet();if(sim)simSummary(sim)};
+$("simHistory").onclick=e=>{const b=e.target.closest("[data-sim]");if(b)simSplitsSheet(b.dataset.sim)};
+$("weakFocus").onclick=()=>{const L=LEVELS[getLevel()];const top=STATIONS.map((st,i)=>({n:st.name,b:stationBest(st),t:L.st[i]})).filter(r=>r.b!=null&&r.b>r.t).sort((a,b)=>(b.b-b.t)/b.t-(a.b-a.t)/a.t).slice(0,3).map(r=>r.n);setFocus(top);render();toast("Focus set: "+top.join(", "))};
+$("dblList").onclick=async e=>{const b=e.target.closest("[data-dbl]");if(!b||b.getAttribute("aria-pressed")==="true")return;if(!getUser()){openSignIn("Sign in to edit the doubles plan.");return}if(await add("doubles",{station:b.dataset.dbl,lead:b.dataset.lead}))toast(`${b.dataset.dbl}: ${b.dataset.lead==="Split"?"split it":b.dataset.lead+" leads"}`)};
+$("wkPrev").onclick=()=>{state.weekOff=(state.weekOff||0)-1;weekPlan()};
+$("wkNext").onclick=()=>{state.weekOff=Math.min(1,(state.weekOff||0)+1);weekPlan()};
+$("wkList").onclick=e=>{const b=e.target.closest("[data-wk]");if(!b)return;state.calDay=b.dataset.wk;state.calMonth=b.dataset.wk.slice(0,7);calPage();$("dayTitle").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})};
+$("recapBtn").onclick=()=>recapCard();
+window.addEventListener("online",()=>sync());
+if(getPass()&&!getUser()){fetch("/api/data",{method:"POST",headers:{"content-type":"application/json","x-app-pass":getPass()},body:JSON.stringify({op:"whoami"})}).then(r=>r.ok?r.json():null).then(j=>{if(j){setAuth(getPass(),j.user)}}).catch(()=>{})}
+if(simGet())simOpen();
 showPage((location.hash||"").slice(1));
 header();lsLoad();render();$("status").textContent="Loading…";sync();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){header();sync()}});
