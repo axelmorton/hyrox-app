@@ -137,6 +137,45 @@ tr:last-child td{border-bottom:0}
 .tgt{font:500 12px var(--mono);color:var(--muted);white-space:nowrap}
 .delta-ok{color:var(--good)}.delta-bad{color:var(--warn)}
 .finish{font:800 16px var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--good)}
+
+body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))!important;z-index:30}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px))}
+.tabbar button{background:none;border:0;color:var(--muted);font:600 11px var(--body);letter-spacing:.06em;text-transform:uppercase;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;cursor:pointer}
+.tabbar .ti{display:grid;place-items:center;width:56px;height:30px;border-radius:999px}
+.tabbar svg{width:22px;height:22px}
+.tabbar button[aria-current="page"]{color:var(--ink)}
+.tabbar button[aria-current="page"] .ti{background:var(--hi);color:#0A0A0A}
+.page{display:flex;flex-direction:column;gap:22px}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.cal-title{font:800 22px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.navbtn{width:38px;height:38px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);font:600 20px/1 var(--body);cursor:pointer}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow span{text-align:center;font:600 11px var(--body);color:var(--muted);padding:2px 0 4px}
+.day{aspect-ratio:1;min-width:0;border-radius:8px;border:1px solid transparent;background:var(--ground);color:var(--ink);font:500 13px var(--mono);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:0}
+.day.future{color:var(--muted)}
+.day.key{border:1px dashed var(--warn)}
+.day.done{background:var(--hi);color:#0A0A0A;font-weight:700}
+.day.today{border:1px solid var(--ink)}
+.day[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:1px}
+.dots{display:flex;gap:2px;height:4px}
+.dots b{width:4px;height:4px;border-radius:50%;background:currentColor}
+.stat-note{margin-top:-12px}
+.day-sum{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.item.nodel{grid-template-columns:auto 1fr}
+.note{font-size:13px;color:var(--ink);margin-top:3px}
+.badge-top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.badge{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.medal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--ground);color:var(--muted);border:2px dashed var(--line)}
+.medal svg{width:22px;height:22px}
+.badge.got .medal{background:var(--hi);color:#0A0A0A;border:2px solid var(--hi-edge)}
+.badge b{font:700 16px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.badge:not(.got) b{color:var(--muted)}
+.badge p{margin:0;font-size:12px;color:var(--muted)}
+.badge .when{font:500 11px var(--mono);color:var(--good)}
+.badge .bar{width:100%;height:6px}
+.badge .prog{font:500 11px var(--mono);color:var(--muted)}
 </style>
 </head>
 <body>
@@ -148,6 +187,8 @@ tr:last-child td{border-bottom:0}
 </div>
 <div class="head-right"><div class="theme" role="group" aria-label="Appearance" id="theme"><button type="button" data-t="auto">Auto</button><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button></div><div class="status" id="status">Connecting…</div></div>
 </header>
+<div class="seg" role="group" aria-label="Athlete" id="who"></div>
+<div id="pgTrain" class="page">
 <div class="board" aria-label="Race countdown">
 <div><span class="eyebrow">Verona · Jan 28</span><span class="big num" id="dVer">-</span></div>
 <div><span class="eyebrow">Madrid · Mar 17</span><span class="big num" id="dMad">-</span></div>
@@ -157,9 +198,6 @@ tr:last-child td{border-bottom:0}
 <a class="rulelink" href="https://maintain.hyrox.com/rulebooks/HYROX_RulebookSingles_EN.pdf" target="_blank" rel="noopener"><span class="ic">PDF</span><span>Singles rulebook<small>Verona · official 26/27</small></span></a>
 <a class="rulelink" href="https://maintain.hyrox.com/rulebooks/HYROX_RulebookDoubles_EN.pdf" target="_blank" rel="noopener"><span class="ic">PDF</span><span>Doubles rulebook<small>Madrid · official 26/27</small></span></a>
 </div>
-<section>
-<div class="seg" role="group" aria-label="Athlete" id="who"></div>
-</section>
 <section>
 <h2>Today</h2>
 <div class="panel today">
@@ -260,6 +298,42 @@ tr:last-child td{border-bottom:0}
 <div class="panel list" id="recent"></div>
 </section>
 </div>
+<div id="pgCal" class="page" hidden>
+<section>
+<h2>Calendar</h2>
+<div class="board" id="calStats"></div>
+<div class="hint">Streaks allow one rest day in a row. Two days off in a row resets it.</div>
+</section>
+<section>
+<div class="panel">
+<div class="cal-head"><button type="button" class="navbtn" id="calPrev" aria-label="Previous month">&lsaquo;</button><span class="cal-title" id="calTitle"></span><button type="button" class="navbtn" id="calNext" aria-label="Next month">&rsaquo;</button></div>
+<div class="cal-grid cal-dow" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+<div class="cal-grid" id="calGrid"></div>
+<div class="legend" style="margin-top:10px"><span><i style="background:var(--hi)"></i>Trained</span><span><i style="border:1px dashed var(--warn)"></i>Key simulation</span><span id="calMonthSum"></span></div>
+</div>
+</section>
+<section>
+<h2 id="dayTitle">Day</h2>
+<div class="panel list" id="dayDetail"></div>
+</section>
+<section>
+<h2>Monthly totals</h2>
+<div class="panel"><table><thead><tr><th>Month</th><th class="r">Days</th><th class="r">Sessions</th><th class="r">Run km</th><th class="r">Erg m</th></tr></thead><tbody id="monthRows"></tbody></table></div>
+</section>
+</div>
+<div id="pgBadges" class="page" hidden>
+<section>
+<div class="badge-top"><h2>Badges</h2><span class="chip" id="badgeCount"></span></div>
+<div class="bar"><i id="badgeBar" style="width:0"></i></div>
+</section>
+<div id="badgeGroups" class="page"></div>
+</div>
+</div>
+<nav class="tabbar" aria-label="Pages">
+<button type="button" data-pg="train" aria-current="page"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3 9.5v5M21 9.5v5M6.5 12h11"/></svg></span>Train</button>
+<button type="button" data-pg="calendar"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></span>Calendar</button>
+<button type="button" data-pg="badges"><span class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5 7 21l5-2.5 5 2.5-1.5-7.5"/></svg></span>Badges</button>
+</nav>
 <div class="toast" id="toast" hidden></div>
 <script>
 const TYPES=["Easy run","Intervals","Compromised","Strength","Simulation","SkiErg","Row","Other"];
@@ -472,7 +546,133 @@ const fc=$("mapFocus");
 if(focus.length){fc.textContent="Focus: "+STATIONS.filter(s=>focus.includes(s.name)).map(s=>s.name).join(", ");fc.className="chip warn"}
 else{fc.textContent="Tap Focus on any station";fc.className="chip"}
 }
-function render(){todayCard();raceMap();loadCheck();ergCards();chart();benchTable();recent()}
+
+// ===== Calendar, streaks, badges =====
+const ymd=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d)};
+const dayGap=(a,b)=>Math.round((parseD(b)-parseD(a))/864e5);
+const isMine=x=>(x.athlete||"Axel")===state.who;
+function trainingDates(){const set=new Set();[...state.sessions,...state.ergs,...state.bench].forEach(x=>{if(isMine(x)&&x.date)set.add(x.date)});return [...set].sort()}
+function dayEntries(ds){const by=(a,b)=>(a.createdAt||"")<(b.createdAt||"")?-1:1;
+return [...state.sessions.filter(x=>isMine(x)&&x.date===ds).map(x=>({...x,kind:"session"})),...state.ergs.filter(x=>isMine(x)&&x.date===ds).map(x=>({...x,kind:"erg"})),...state.bench.filter(x=>isMine(x)&&x.date===ds).map(x=>({...x,kind:"bench"}))].sort(by)}
+function streaks(dates){let run=0,best=0,prev=null;for(const d of dates){run=prev&&dayGap(prev,d)<=2?run+1:1;best=Math.max(best,run);prev=d}
+const alive=prev&&dayGap(prev,today())<=2;return{cur:alive?run:0,best}}
+function calPage(){
+const td=today(),all=trainingDates(),past=all.filter(d=>d<=td),st=streaks(past);
+if(!state.calMonth)state.calMonth=td.slice(0,7);if(!state.calDay)state.calDay=td;
+const thisMo=past.filter(d=>d.startsWith(td.slice(0,7))).length;
+const cell=(l,v)=>`<div><span class="eyebrow">${l}</span><span class="big num">${v}<small>${v===1?"day":"days"}</small></span></div>`;
+$("calStats").innerHTML=cell("This month",thisMo)+cell("Hot streak",st.cur)+cell("Best streak",st.best)+cell("All time",past.length);
+const [y,m]=state.calMonth.split("-").map(Number),first=new Date(y,m-1,1),lead=(first.getDay()+6)%7,n=new Date(y,m,0).getDate();
+$("calTitle").textContent=first.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+let h="";for(let i=0;i<lead;i++)h+="<span></span>";
+for(let d=1;d<=n;d++){const ds=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`,c=dayEntries(ds).length,cls=["day"];
+if(c)cls.push("done");if(ds===td)cls.push("today");if(ds>td)cls.push("future");if(KEY_SIMS[ds]&&!c)cls.push("key");
+h+=`<button type="button" class="${cls.join(" ")}" data-day="${ds}" aria-pressed="${ds===state.calDay}" aria-label="${parseD(ds).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}${c?", "+c+" logged":""}"><span>${d}</span><span class="dots">${"<b></b>".repeat(Math.min(c,3))}</span></button>`}
+$("calGrid").innerHTML=h;
+const moDays=all.filter(d=>d.startsWith(state.calMonth)).length;
+$("calMonthSum").textContent=`${moDays} training ${moDays===1?"day":"days"} this month`;
+dayDetail();monthRows();
+}
+function dayDetail(){
+const ds=state.calDay,td=today(),raw=dayEntries(ds),pl=planFor(ds);
+const used=new Set();raw.forEach(x=>{if(x.kind==="session"&&MACHINES.includes(x.type)){const t=Date.parse(x.createdAt||"");const e=raw.find(y=>y.kind==="erg"&&!used.has(y)&&y.machine===x.type&&Math.abs(Date.parse(y.createdAt||"")-t)<15000);if(e){used.add(e);x.piece=e}}});
+const items=raw.filter(x=>!used.has(x));
+$("dayTitle").textContent=parseD(ds).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+const planTxt=pl&&pl.title?`<div class="hint" style="padding-bottom:6px">Plan: ${esc(pl.title)}${pl.type?"":""}</div>`:"";
+if(!items.length){$("dayDetail").innerHTML=planTxt+`<div class="empty">${ds>=td?"Nothing logged yet.":"Nothing logged. Rest day."}</div>`;return}
+const km=items.reduce((a,x)=>a+(x.kind==="session"?Number(x.km)||0:0),0),min=items.reduce((a,x)=>a+(x.kind==="session"?Number(x.minutes)||0:0),0),em=raw.reduce((a,x)=>a+(x.kind==="erg"?Number(x.distance)||0:0),0);
+const chips=[min?`${min} min`:"",km?`${Math.round(km*10)/10} km run`:"",em?`${em} m on ergs`:""].filter(Boolean).map(t=>`<span class="chip">${t}</span>`).join("");
+$("dayDetail").innerHTML=planTxt+(chips?`<div class="day-sum">${chips}</div>`:"")+items.map(x=>{
+let tag,main,meta="";
+if(x.kind==="session"){tag=x.type;const k=Number(x.km)||0,mi=Number(x.minutes)||0;
+if(x.piece){const d=Number(x.piece.distance),t=Number(x.piece.seconds);main=`${d} m · <span class="num">${fmtT(t)}</span>`;
+meta=[`${fmtT(t/d*500)}/500 m`,`1000 m ${d===1000?"":"estimate "}${fmtT(d===1000?t:est1000(d,t))}`,x.effort?"Effort "+Number(x.effort)+"/5":"",x.soreness?"Soreness "+Number(x.soreness)+"/5":""].filter(Boolean).join(" · ")}
+else{main=[k?`${k} km`:"",mi?`${mi} min`:"",k&&mi?`<span class="num">${fmtT(mi*60/k)}</span>/km pace`:""].filter(Boolean).join(" · ")||"Logged";
+meta=[x.effort?"Effort "+Number(x.effort)+"/5":"",x.soreness?"Soreness "+Number(x.soreness)+"/5":""].filter(Boolean).join(" · ")}}
+else if(x.kind==="erg"){tag=x.machine;const d=Number(x.distance),t=Number(x.seconds);
+main=`${d} m · <span class="num">${fmtT(t)}</span>`;meta=`${fmtT(t/d*500)}/500 m · 1000 m ${d===1000?"":"estimate "}${fmtT(d===1000?t:est1000(d,t))}`}
+else{tag="Test";main=`${esc(x.item)} · <span class="num">${fmtT(x.seconds)}</span>`}
+return `<div class="item nodel"><span class="tag">${esc(tag)}</span><div><div>${main}</div>${meta?`<div class="meta">${meta}</div>`:""}${x.note?`<div class="note">${esc(x.note)}</div>`:""}</div></div>`}).join("");
+}
+function monthRows(){
+const td=parseD(today());let rows="";
+const firstMo=(trainingDates()[0]||today()).slice(0,7);
+for(let i=0;i<6;i++){const d=new Date(td.getFullYear(),td.getMonth()-i,1),k=ymd(d).slice(0,7);if(k<firstMo)break;
+const S=state.sessions.filter(x=>isMine(x)&&x.date&&x.date.startsWith(k)),E=state.ergs.filter(x=>isMine(x)&&x.date&&x.date.startsWith(k));
+const days=trainingDates().filter(x=>x.startsWith(k)).length;
+const km=S.reduce((a,x)=>a+(Number(x.km)||0),0),em=E.reduce((a,x)=>a+(Number(x.distance)||0),0);
+rows+=`<tr><td>${d.toLocaleDateString(undefined,{month:"short",year:"numeric"})}</td><td class="r num">${days}</td><td class="r num">${S.length+E.length}</td><td class="r num">${Math.round(km*10)/10}</td><td class="r num">${em.toLocaleString()}</td></tr>`}
+$("monthRows").innerHTML=rows;
+}
+const BADGE_ICONS={
+Consistency:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2.5 1.5-4 2.5-5 .3 1.8 1.2 2.8 2.5 3-.5-3 0-5.5 0-8z"/></svg>',
+"Erg PRs":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>',
+"Race countdown":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>',
+Variety:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>'};
+function badgeGroups(){
+const td=today(),S=state.sessions.filter(isMine),E=state.ergs.filter(isMine),B=state.bench.filter(isMine);
+const dates=trainingDates().filter(d=>d<=td),byDate=(a,b)=>a.date<b.date?-1:a.date>b.date?1:0;
+const firstDate=arr=>{const r=arr.filter(x=>x.date).sort(byDate);return r.length?r[0].date:null};
+const streakHit=n=>{let run=0,prev=null;for(const d of dates){run=prev&&dayGap(prev,d)<=2?run+1:1;prev=d;if(run>=n)return d}return null};
+const bestWeek=()=>{const wk={};let best=0,hit=null;for(const d of dates){const k=ymd(weekStart(d));wk[k]=(wk[k]||0)+1;if(wk[k]>best)best=wk[k];if(wk[k]>=6&&!hit)hit=d}return{best,hit}};
+const real1000=mc=>[...E.filter(e=>e.machine===mc&&Number(e.distance)===1000).map(e=>({date:e.date,s:Number(e.seconds)})),...B.filter(b=>b.item===(mc==="SkiErg"?"SkiErg 1000 m":"Row 1000 m")).map(b=>({date:b.date,s:Number(b.seconds)}))].sort(byDate);
+const under=(mc,sec)=>{const r=real1000(mc).find(x=>x.s<=sec);return r?r.date:null};
+const goalFor=mc=>getGoal(mc)||LEVELS[getLevel()].st[mc==="SkiErg"?0:4];
+const bestReal=mc=>{const r=real1000(mc);return r.length?Math.min(...r.map(x=>x.s)):null};
+const prDate=()=>{let hit=null;["SkiErg","Row"].forEach(mc=>{let best=Infinity,count=0;for(const p of ergPoints(mc)){if(count&&p.v<best){if(!hit||p.date<hit)hit=p.date;break}best=Math.min(best,p.v);count++}});return hit};
+const trainedBefore=ms=>dates.some(d=>d<=ms&&dayGap(d,ms)<=7);
+const onDate=(ms,label)=>({date:td>=ms&&trainedBefore(ms)?ms:null,prog:td<ms?`In ${dayGap(td,ms)} days`:td>=ms&&!trainedBefore(ms)?"Missed: no training that week":null});
+const finisher=(from,to)=>{const r=B.filter(b=>b.item==="Full race"&&b.date>=from&&b.date<=to).sort(byDate);return r.length?r[0].date:null};
+const types=TYPES.filter(t=>t!=="Other"),doneTypes=new Set(S.map(x=>x.type).filter(t=>types.includes(t)));
+const cnt=(n,label)=>({id:"days"+n,name:label,desc:`${n} training days logged`,date:dates[n-1]||null,cur:Math.min(dates.length,n),max:n});
+const wk=bestWeek(),sk=streaks(dates);
+const fmtS=t=>fmtT(t);
+return [
+{name:"Consistency",items:[
+{id:"first",name:"Day one",desc:"Log your first training day",date:dates[0]||null,cur:Math.min(dates.length,1),max:1},
+cnt(10,"Ten down"),cnt(25,"Quarter century"),cnt(50,"Fifty strong"),cnt(100,"Triple digits"),
+{id:"streak7",name:"On fire",desc:"7-day hot streak",date:streakHit(7),cur:Math.min(sk.best,7),max:7},
+{id:"streak21",name:"Unstoppable",desc:"21-day hot streak",date:streakHit(21),cur:Math.min(sk.best,21),max:21},
+{id:"week6",name:"Perfect week",desc:"6 training days in one week",date:wk.hit,cur:Math.min(wk.best,6),max:6}]},
+{name:"Erg PRs",items:[
+{id:"ski1",name:"First pull",desc:"Log a SkiErg piece",date:firstDate(E.filter(e=>e.machine==="SkiErg")),cur:E.some(e=>e.machine==="SkiErg")?1:0,max:1},
+{id:"row1",name:"First stroke",desc:"Log a Row piece",date:firstDate(E.filter(e=>e.machine==="Row")),cur:E.some(e=>e.machine==="Row")?1:0,max:1},
+{id:"pr",name:"PR breaker",desc:"Beat your best 1000 m (real or estimated)",date:prDate()},
+{id:"ski4",name:"Sub-4 SkiErg",desc:"Real 1000 m SkiErg under 4:00",date:under("SkiErg",239),prog:bestReal("SkiErg")?`Best real 1000 m: ${fmtS(bestReal("SkiErg"))}`:"Needs a real 1000 m piece"},
+{id:"row4",name:"Sub-4 Row",desc:"Real 1000 m row under 4:00",date:under("Row",239),prog:bestReal("Row")?`Best real 1000 m: ${fmtS(bestReal("Row"))}`:"Needs a real 1000 m piece"},
+{id:"skigoal",name:"SkiErg goal",desc:`Real 1000 m at or under ${fmtS(goalFor("SkiErg"))}`,date:under("SkiErg",goalFor("SkiErg")),prog:bestReal("SkiErg")?`Best: ${fmtS(bestReal("SkiErg"))}`:"Needs a real 1000 m piece"},
+{id:"rowgoal",name:"Row goal",desc:`Real 1000 m at or under ${fmtS(goalFor("Row"))}`,date:under("Row",goalFor("Row")),prog:bestReal("Row")?`Best: ${fmtS(bestReal("Row"))}`:"Needs a real 1000 m piece"}]},
+{name:"Race countdown",items:[
+{id:"v100",name:"100 to Verona",desc:"Training when Verona is 100 days out",...onDate("2026-10-20")},
+{id:"m100",name:"100 to Madrid",desc:"Training when Madrid is 100 days out",...onDate("2026-12-07")},
+{id:"v30",name:"Verona in sight",desc:"Training when Verona is 30 days out",...onDate("2026-12-29")},
+{id:"vweek",name:"Race week",desc:"Made it to Verona race week",...onDate("2027-01-28")},
+{id:"vfin",name:"Verona finisher",desc:"Log a Full race benchmark in Verona",date:finisher("2027-01-28","2027-02-07"),prog:td<"2027-01-28"?`In ${dayGap(td,"2027-01-28")} days`:null},
+{id:"m30",name:"Madrid in sight",desc:"Training when Madrid is 30 days out",...onDate("2027-02-15")},
+{id:"mfin",name:"Madrid finisher",desc:"Log a Full race benchmark in Madrid",date:finisher("2027-03-17","2027-03-28"),prog:td<"2027-03-17"?`In ${dayGap(td,"2027-03-17")} days`:null}]},
+{name:"Variety",items:[
+{id:"alltypes",name:"All-rounder",desc:"Log every session type",date:doneTypes.size===types.length?(()=>{const seen=new Set();for(const x of [...S].sort(byDate)){if(types.includes(x.type))seen.add(x.type);if(seen.size===types.length)return x.date}return null})():null,cur:doneTypes.size,max:types.length},
+{id:"sim",name:"Dress rehearsal",desc:"Log a Simulation session",date:firstDate(S.filter(x=>x.type==="Simulation")),cur:S.some(x=>x.type==="Simulation")?1:0,max:1},
+{id:"strength",name:"Iron day",desc:"Log a Strength session",date:firstDate(S.filter(x=>x.type==="Strength")),cur:S.some(x=>x.type==="Strength")?1:0,max:1},
+{id:"compromised",name:"Compromised",desc:"Log a Compromised running session",date:firstDate(S.filter(x=>x.type==="Compromised")),cur:S.some(x=>x.type==="Compromised")?1:0,max:1},
+{id:"botherg",name:"Double machine",desc:"Log both SkiErg and Row",date:(()=>{const a=firstDate(E.filter(e=>e.machine==="SkiErg")),b=firstDate(E.filter(e=>e.machine==="Row"));return a&&b?(a>b?a:b):null})(),cur:(E.some(e=>e.machine==="SkiErg")?1:0)+(E.some(e=>e.machine==="Row")?1:0),max:2},
+{id:"bench",name:"Baseline",desc:"Log your first benchmark test",date:firstDate(B),cur:B.length?1:0,max:1}]}
+];
+}
+function earnedIds(){return badgeGroups().flatMap(g=>g.items.filter(b=>b.date).map(b=>b.id))}
+function badgesPage(){
+const groups=badgeGroups(),all=groups.flatMap(g=>g.items),got=all.filter(b=>b.date).length;
+$("badgeCount").textContent=`${got} of ${all.length} earned`;$("badgeBar").style.width=Math.round(got/all.length*100)+"%";
+$("badgeGroups").innerHTML=groups.map(g=>`<section><h2>${g.name}</h2><div class="badges">${g.items.map(b=>{
+const p=b.date?`<span class="when">Earned ${fmtD(b.date)}</span>`:b.max?`<div class="bar"><i style="width:${Math.round((b.cur||0)/b.max*100)}%"></i></div><span class="prog">${b.cur||0} / ${b.max}</span>`:b.prog?`<span class="prog">${esc(b.prog)}</span>`:`<span class="prog">Locked</span>`;
+return `<div class="badge${b.date?" got":""}"><div class="medal">${BADGE_ICONS[g.name]}</div><b>${esc(b.name)}</b><p>${esc(b.desc)}</p>${p}</div>`}).join("")}</div></section>`).join("");
+}
+const PAGES={train:"pgTrain",calendar:"pgCal",badges:"pgBadges"};
+function showPage(pg){if(!PAGES[pg])pg="train";Object.entries(PAGES).forEach(([k,id])=>$(id).hidden=k!==pg);
+document.querySelectorAll(".tabbar button").forEach(b=>{if(b.dataset.pg===pg)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+try{history.replaceState(null,"","#"+pg)}catch(e){}window.scrollTo(0,0)}
+function render(){todayCard();raceMap();loadCheck();ergCards();chart();benchTable();recent();calPage();badgesPage()}
 function growNote(){const t=$("sNote");if(!t)return;t.style.height="auto";t.style.height=Math.max(84,t.scrollHeight+2)+"px"}
 function isErgType(){return MACHINES.includes(state.type)}
 function syncErg(){const on=isErgType();$("sErgRow").hidden=!on;$("sErgHint").hidden=!on;$("sKmWrap").hidden=on}
@@ -494,7 +694,9 @@ if(r.status===429)throw{code:"rate_limited",status:429};
 if(!r.ok){let m="";try{m=(await r.json()).error}catch(e){}throw{code:"error",status:r.status,message:m}}
 return r.json();
 }
-function applyData(d){state.sessions=d.sessions||[];state.bench=d.benchmarks||[];state.ergs=d.ergs||[];lsSave();render()}
+function applyData(d){state.sessions=d.sessions||[];state.bench=d.benchmarks||[];state.ergs=d.ergs||[];lsSave();render();
+state.earned=state.earned||{};const now=earnedIds(),prev=state.earned[state.who];state.earned[state.who]=new Set(now);
+if(prev){const fresh=badgeGroups().flatMap(g=>g.items).filter(b=>b.date&&!prev.has(b.id)).map(b=>b.name);if(fresh.length)setTimeout(()=>toast("Badge unlocked: "+fresh.join(", ")),1900)}}
 async function sync(){
 try{applyData(await api("/api/data"));$("status").textContent="Synced"}
 catch(e){$("status").textContent=e.status===401?"Passcode needed":(e.message||"Offline: showing saved copy")}
@@ -548,6 +750,11 @@ $("ergCards").onclick=e=>{const b=e.target.closest("[data-goal]");if(!b)return;c
 function applyTheme(t){const r=document.documentElement;if(t==="light"||t==="dark")r.setAttribute("data-theme",t);else r.removeAttribute("data-theme");try{localStorage.setItem("hyrox-theme",t)}catch(e){}[...$("theme").children].forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===t))}
 (function(){let t="auto";try{t=localStorage.getItem("hyrox-theme")||"auto"}catch(e){}applyTheme(t)})();
 $("theme").onclick=e=>{const b=e.target.closest("[data-t]");if(b)applyTheme(b.dataset.t)};
+document.querySelector(".tabbar").onclick=e=>{const b=e.target.closest("[data-pg]");if(b)showPage(b.dataset.pg)};
+$("calPrev").onclick=()=>{const[y,m]=state.calMonth.split("-").map(Number);state.calMonth=ymd(new Date(y,m-2,1)).slice(0,7);calPage()};
+$("calNext").onclick=()=>{const[y,m]=state.calMonth.split("-").map(Number);state.calMonth=ymd(new Date(y,m,1)).slice(0,7);calPage()};
+$("calGrid").onclick=e=>{const b=e.target.closest("[data-day]");if(!b)return;state.calDay=b.dataset.day;calPage();$("dayTitle").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"})};
+showPage((location.hash||"").slice(1));
 header();lsLoad();render();$("status").textContent="Loading…";sync();
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){header();sync()}});
 </script>
