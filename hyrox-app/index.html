@@ -221,6 +221,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .wk-day small{display:block;font:500 11px var(--mono);color:var(--muted)}
 .wk-sum{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
 .recap-img{width:100%;border-radius:12px;border:1px solid var(--line)}
+.who-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -232,7 +233,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 </div>
 <div class="head-right"><div class="theme" role="group" aria-label="Appearance" id="theme"><button type="button" data-t="auto">Auto</button><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button></div><div class="status" id="status">Connecting…</div><button type="button" class="chip acct" id="acct">Sign in</button></div>
 </header>
-<div class="seg" role="group" aria-label="Athlete" id="who"></div>
+<div class="who-row"><span class="eyebrow">Viewing</span><div class="seg" role="group" aria-label="Viewing athlete" id="who"></div></div>
 <div id="pgTrain" class="page">
 <div class="board" aria-label="Race countdown">
 <div><span class="eyebrow">Verona · Jan 28</span><span class="big num" id="dVer">-</span></div>
@@ -901,10 +902,12 @@ let db=null, local=false;
 function norm(a){(a||[]).forEach(x=>{if(x&&x.athlete==="Partner")x.athlete="Noé"});return a||[]}
 function lsSave(){try{localStorage.setItem(LS,JSON.stringify({s:state.sessions.filter(x=>!x.pending),b:state.bench.filter(x=>!x.pending),e:state.ergs.filter(x=>!x.pending),d:state.doubles.filter(x=>!x.pending)}))}catch(e){}}
 function lsLoad(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");state.sessions=norm(d.s);state.bench=norm(d.b);state.ergs=norm(d.e);state.doubles=d.d||[];qLoad().forEach(applyLocal)}catch(e){}}
-function getPass(){try{return localStorage.getItem("hyrox-pass")||""}catch(e){return ""}}
-function getUser(){try{return localStorage.getItem("hyrox-user")||""}catch(e){return ""}}
-function setAuth(pass,user){try{if(pass){localStorage.setItem("hyrox-pass",pass);localStorage.setItem("hyrox-user",user)}else{localStorage.removeItem("hyrox-pass");localStorage.removeItem("hyrox-user")}}catch(e){}acctBtn()}
-function acctBtn(){const u=getUser(),b=$("acct");b.textContent=u?`Signed in · ${u}`:"Sign in";b.className="chip acct"+(u?" ok":"")}
+try{localStorage.removeItem("hyrox-pass");localStorage.removeItem("hyrox-user")}catch(e){}
+function getAuth(){try{return JSON.parse(localStorage.getItem("hyrox-auth-v2")||"null")||{}}catch(e){return {}}}
+function getPass(){return getAuth().pass||""}
+function getUser(){return getAuth().user||""}
+function setAuth(pass,user){try{if(pass)localStorage.setItem("hyrox-auth-v2",JSON.stringify({pass,user}));else localStorage.removeItem("hyrox-auth-v2")}catch(e){}acctBtn()}
+function acctBtn(){const u=getUser(),b=$("acct");b.textContent=u?`Signed in as ${u}`:"Sign in";b.className="chip acct"+(u?" ok":"")}
 async function api(path,body){
 let r;
 try{r=await fetch(path,{method:body?"POST":"GET",headers:{"content-type":"application/json","x-app-pass":getPass()},body:body?JSON.stringify(body):undefined})}catch(e){throw{code:"network"}}
@@ -960,7 +963,7 @@ function closeSheet(){const d=$("sheet");try{d.close()}catch(e){}d.removeAttribu
 const sheetHead=t=>`<div class="sheet-head"><h2>${t}</h2><button type="button" class="sheet-x" data-close aria-label="Close">×</button></div>`;
 function openSignIn(msg){
 const u=getUser();
-if(u&&!msg){openSheet(sheetHead("Account")+`<div>Signed in as <b>${esc(u)}</b> on this phone.</div><div class="hint">${u==="Axel"?"You can edit everyone's entries.":"You can add and edit your own entries and the doubles plan."}</div><button type="button" class="danger" id="signOut">Sign out</button>`);
+if(u&&!msg){openSheet(sheetHead("Account")+`<div>Signed in as <b>${esc(u)}</b> on this phone. Your passcode is remembered here until you sign out.</div><div class="hint">Not ${esc(u)}? Sign out, then sign in with your own passcode.</div><div class="hint">${u==="Axel"?"You can edit everyone's entries.":"You can add and edit your own entries and the doubles plan."}</div><button type="button" class="danger" id="signOut">Sign out</button>`);
 $("signOut").onclick=()=>{setAuth("","");closeSheet();toast("Signed out")};return}
 openSheet(sheetHead("Sign in")+`<form id="signForm" style="gap:10px"><div class="hint">${esc(msg||"Enter your passcode. Axel and Noé each have their own.")}</div><label>Passcode<input type="password" id="sgPass" autocomplete="current-password" required></label><div class="err" id="sgErr"></div><button class="primary" type="submit">Sign in</button></form>`);
 setTimeout(()=>{try{$("sgPass").focus()}catch(e){}},100);
@@ -1054,7 +1057,6 @@ $("wkNext").onclick=()=>{state.weekOff=Math.min(1,(state.weekOff||0)+1);weekPlan
 $("wkList").onclick=e=>{const b=e.target.closest("[data-wk]");if(!b)return;state.calDay=b.dataset.wk;state.calMonth=b.dataset.wk.slice(0,7);calPage();$("dayTitle").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"})};
 $("recapBtn").onclick=()=>recapCard();
 window.addEventListener("online",()=>sync());
-if(getPass()&&!getUser()){fetch("/api/data",{method:"POST",headers:{"content-type":"application/json","x-app-pass":getPass()},body:JSON.stringify({op:"whoami"})}).then(r=>r.ok?r.json():null).then(j=>{if(j){setAuth(getPass(),j.user)}}).catch(()=>{})}
 if(simGet())simOpen();
 showPage((location.hash||"").slice(1));
 header();lsLoad();render();$("status").textContent="Loading…";sync();
