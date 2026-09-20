@@ -51,6 +51,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
 .board{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .board>div{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .board .big{font-family:var(--display);font-size:40px;font-weight:800;line-height:1}
+.board .big.sm{font-size:30px}
 .board .big small{font-size:16px;font-weight:600;color:var(--muted);margin-left:4px}
 .phase{grid-column:1/-1}
 .phase .big{color:var(--accent);align-self:flex-start;background:linear-gradient(transparent 62%,var(--band) 62%);padding-inline:2px}
@@ -156,6 +157,8 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .day.future{color:var(--muted)}
 .day.key{border:1px dashed var(--warn)}
 .day.done{background:var(--hi);color:#0A0A0A;font-weight:700}
+.day.rest{border:1px solid var(--line)}
+.day.rest .dots b{background:var(--muted)}
 .day.today{border:1px solid var(--ink)}
 .day[aria-pressed="true"]{outline:2px solid var(--ink);outline-offset:1px}
 .dots{display:flex;gap:2px;height:4px}
@@ -219,6 +222,10 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .wk-row.today .wk-day{color:var(--accent)}
 .wk-day{font:700 15px/1.1 var(--display);text-transform:uppercase}
 .wk-day small{display:block;font:500 11px var(--mono);color:var(--muted)}
+.vol{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-top:10px}
+.vol>div{background:var(--surface);padding:9px 8px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.vol .eyebrow{font-size:9px;letter-spacing:.08em}
+.vol .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:500;line-height:1.2;color:var(--ink)}
 .wk-sum{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
 .recap-img{width:100%;border-radius:12px;border:1px solid var(--line)}
 .who-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -251,6 +258,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="plan" id="tPlan">-</div>
 <div class="hint" id="tDetail"></div>
 <button type="button" class="primary" id="tLog">Log this session</button>
+<button type="button" class="ghost" id="tRest" hidden>Log a rest day</button>
 </div>
 </section>
 <section>
@@ -299,6 +307,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="panel chart">
 <div id="chart"></div>
 <div class="legend"><span><i style="background:var(--accent)"></i>Run km per week</span><span><i style="background:var(--band);border:1px solid var(--accent)"></i>Target 25-40 km</span></div>
+<div class="wk-sum" style="margin-top:8px"><span class="hint" id="runSum"></span><span class="chip" id="runChip" hidden></span></div>
 </div>
 </section>
 <section>
@@ -340,6 +349,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <h2>Race simulation</h2>
 <div class="panel" style="display:flex;flex-direction:column;gap:12px">
 <div class="seg" role="group" aria-label="Simulation length" id="simMode"></div>
+<label class="check"><input type="checkbox" id="simRox"> Time the Roxzone separately</label>
 <div class="hint" id="simHint"></div>
 <button type="button" class="primary" id="simStart">Start simulation</button>
 <div class="list" id="simHistory"></div>
@@ -381,6 +391,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="panel">
 <div class="wk-sum"><span id="wkSum" class="hint"></span><span class="chip" id="wkPct"></span></div>
 <div id="wkList"></div>
+<div class="vol" id="wkVol"></div>
 <button type="button" class="primary" id="recapBtn" style="width:100%;margin-top:10px">Weekly recap card</button>
 </div>
 </section>
@@ -389,12 +400,17 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="cal-head"><button type="button" class="navbtn" id="calPrev" aria-label="Previous month">&lsaquo;</button><span class="cal-title" id="calTitle"></span><button type="button" class="navbtn" id="calNext" aria-label="Next month">&rsaquo;</button></div>
 <div class="cal-grid cal-dow" aria-hidden="true"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
 <div class="cal-grid" id="calGrid"></div>
-<div class="legend" style="margin-top:10px"><span><i style="background:var(--hi)"></i>Trained</span><span><i style="border:1px dashed var(--warn)"></i>Key simulation</span><span id="calMonthSum"></span></div>
+<div class="legend" style="margin-top:10px"><span><i style="background:var(--hi)"></i>Trained</span><span><i style="border:1px dashed var(--warn)"></i>Key simulation</span><span><i style="background:var(--muted)"></i>Rest logged</span><span id="calMonthSum"></span></div>
 </div>
 </section>
 <section>
 <h2 id="dayTitle">Day</h2>
 <div class="panel list" id="dayDetail"></div>
+</section>
+<section>
+<h2>Since you started</h2>
+<div class="board" id="seasonStats"></div>
+<div class="hint" id="seasonNote"></div>
 </section>
 <section>
 <h2>Monthly totals</h2>
@@ -474,10 +490,13 @@ function todayCard(){
 const ds=today(),pl=planFor(ds);
 $("tDay").textContent=parseD(ds).toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
 $("tPlan").textContent=pl.title;$("tDetail").textContent=pl.detail;
-const done=state.sessions.some(s=>s.date===ds&&(s.athlete||"Axel")===state.who);
+const done=dayEntries(ds).length>0;
+const rest=restOn(ds);
 const st=$("tState");
-if(!pl.type){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=true}
-else{$("tLog").hidden=done;st.textContent=done?"Done":pl.key?"Key session":"Not logged";st.className="chip"+(done?" ok":pl.key?" key":"")}
+const rb=$("tRest");
+if(!pl.type){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=true;rb.hidden=true;rb.dataset.undo=""}
+else if(rest&&!done){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=true;rb.hidden=false;rb.textContent="Undo rest day";rb.dataset.undo=rest.id}
+else{$("tLog").hidden=done;st.textContent=done?"Done":pl.key?"Key session":"Not logged";st.className="chip"+(done?" ok":pl.key?" key":"");rb.hidden=done;rb.textContent="Log a rest day";rb.dataset.undo=""}
 }
 function loadCheck(){
 const mine=state.sessions.filter(s=>(s.athlete||"Axel")===state.who);
@@ -528,6 +547,24 @@ g+=`<rect x="${x}" y="${y(w.km)}" width="${bw*.6}" height="${h}" rx="3" fill="va
 if(w.km>0)g+=`<text x="${x+bw*.3}" y="${y(w.km)-5}" text-anchor="middle" font-size="11" fill="var(--ink)" font-family="JetBrains Mono,monospace">${Math.round(w.km*10)/10}</text>`;
 g+=`<text x="${x+bw*.3}" y="${H-9}" text-anchor="middle" font-size="11" fill="var(--muted)">${last?"This wk":w.d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}</text>`});
 $("chart").innerHTML=g+"</svg>";
+runLoad(weeks);
+}
+// Weekly running load: where you sit in the 25-40 km band, and how fast you are ramping.
+// The ~10% a week rule of thumb comes from the guide, not from a study.
+function runLoad(weeks){
+const r=v=>Math.round(v*10)/10,cur=weeks[weeks.length-1],prev=weeks[weeks.length-2],prev2=weeks[weeks.length-3];
+const pct=(a,b)=>Math.round((a/b-1)*100),chip=$("runChip"),sum=$("runSum");
+const dow=(parseD(today()).getDay()+6)%7,left=6-dow;
+let txt=`${r(cur.km)} km so far this week`+(left?`, ${left} ${left===1?"day":"days"} to go`:", last day of the week"),tag="",cls="chip";
+if(prev&&prev.km>=15&&cur.km>prev.km*1.1&&cur.km-prev.km>=3){tag=`+${pct(cur.km,prev.km)}% on last week`;cls="chip warn";
+txt+=`. Already past last week\u2019s ${r(prev.km)} km. The rule of thumb is about 10% a week.`}
+else if(prev&&prev2&&prev2.km>=15&&prev.km>prev2.km*1.1&&prev.km-prev2.km>=3){tag=`Last week +${pct(prev.km,prev2.km)}%`;cls="chip warn";
+txt+=`. Last week jumped from ${r(prev2.km)} to ${r(prev.km)} km, more than the usual 10% step.`}
+else if(cur.km>40){tag="Above the band";cls="chip warn";txt+=". Above the 25 to 40 km band."}
+else if(cur.km>=25){tag="In the band";cls="chip ok";txt+=". In the 25 to 40 km band."}
+else if(prev&&prev.km>=25){tag="On track";cls="chip";txt+=`. Last week ${r(prev.km)} km.`}
+else{tag="Building";cls="chip";txt+=". The target band is 25 to 40 km."}
+sum.textContent=txt;chip.textContent=tag;chip.className=cls;chip.hidden=!tag;
 }
 function benchTable(){
 const mine=state.bench.filter(b=>(b.athlete||"Axel")===state.who);
@@ -543,6 +580,7 @@ const all=[...state.sessions.map(s=>({...s,kind:"session"})),...state.bench.map(
 .sort((a,b)=>a.date===b.date?((a.createdAt||"")<(b.createdAt||"")?1:-1):(a.date<b.date?1:-1)).slice(0,15);
 $("recent").innerHTML=all.length?all.map(x=>{
 const tag=x.kind==="session"?x.type:x.kind==="erg"?x.machine:"Test";
+if(x.kind==="session"&&!notRest(x))return `<div class="item${x.pending?" pending":""}"><span class="tag">Rest</span><span class="item-main"><div>Rest day</div><div class="meta">${fmtD(x.date)}${x.note&&x.note!=="Rest day"?" · "+esc(x.note):""}${x.pending?" · Waiting to sync":""}</div></span><button class="del" aria-label="Delete rest day" data-kind="session" data-id="${esc(x.id)}">×</button></div>`;
 const main=x.kind==="erg"?`${x.distance} m · <span class="num">${fmtT(x.seconds)}</span> · ${fmtT(x.seconds/x.distance*500)}/500`:x.kind==="session"?[x.km?`${x.km} km`:"",x.minutes?`${x.minutes} min`:""].filter(Boolean).join(" · ")||"Logged":`${esc(x.item)} · <span class="num">${fmtT(x.seconds)}</span>`;
 return `<div class="item${x.pending?" pending":""}"><span class="tag">${esc(tag)}</span><button type="button" class="item-main" data-edit="${x.kind}" data-id="${esc(x.id)}" aria-label="Edit entry"><div>${main}</div><div class="meta">${fmtD(x.date)}${x.effort?" · Effort "+Number(x.effort):""}${x.soreness?" · Sore "+Number(x.soreness):""}${x.note?" · "+esc(x.note):""}${x.pending?" · Waiting to sync":""}</div></button><button class="del" aria-label="Delete entry" data-kind="${x.kind}" data-id="${esc(x.id)}">×</button></div>`}).join("")
 :`<div class="empty">Nothing logged yet for ${esc(state.who)}. Your first session shows up here.</div>`;
@@ -604,11 +642,16 @@ const STATIONS=[
 {name:"Sandbag Lunges",spec:"100 m · 20 kg",test:"Sandbag Lunges 100 m",tip:"Back knee touches every step. Never drop the bag."},
 {name:"Wall Balls",spec:"100 reps · 6 kg · 3.00 m target",test:"Wall Balls 100",tip:"Hip crease below knee, hit the target. Sets you can hold."}
 ];
+// run = pure 1 km race pace. rox = one transition. Every level sums to its own finish time:
+// 8 x run + 8 stations + 8 x rox. Do not hardcode a finish label, levelFinish() derives it.
 const LEVELS={
-Casual:{finish:"1:30",note:"About an average men's finish",run:330,st:[300,190,290,300,300,150,280,360]},
-Moderate:{finish:"1:20",note:"Solid, well above average",run:298,st:[280,160,250,255,280,130,240,315]},
-Pro:{finish:"1:10",note:"Chasing a top finish",run:269,st:[260,130,220,220,260,110,210,270]}
+Casual:{note:"About an average men's finish",run:354,rox:50,st:[300,190,290,300,300,150,280,360]},
+Moderate:{note:"Solid, well above average",run:321,rox:40,st:[280,160,250,255,280,130,240,315]},
+Pro:{note:"Chasing a top finish",run:285,rox:30,st:[260,130,220,220,260,110,210,270]}
 };
+const levelSecs=k=>{const L=LEVELS[k];return 8*L.run+L.st.reduce((a,b)=>a+b,0)+8*L.rox};
+const fmtHM=s=>`${Math.floor(s/3600)}:${String(Math.round(s%3600/60)).padStart(2,"0")}`;
+const levelFinish=k=>fmtHM(levelSecs(k));
 function getLevel(){try{const v=localStorage.getItem("hyrox-level");return LEVELS[v]?v:"Moderate"}catch(e){return "Moderate"}}
 function setLevel(v){try{localStorage.setItem("hyrox-level",v)}catch(e){}}
 function getFocus(){try{return JSON.parse(localStorage.getItem("hyrox-focus")||"[]")}catch(e){return []}}
@@ -621,8 +664,8 @@ return best;
 }
 function raceMap(){
 const focus=getFocus();let tested=0;const L=getLevel(),LV=LEVELS[L];
-$("lvl").innerHTML=Object.keys(LEVELS).map(k=>`<button type="button" data-lvl="${k}" aria-pressed="${k===L}">${k}<small>${LEVELS[k].finish} finish</small></button>`).join("");
-$("lvlNote").textContent=`${L}: ${LV.note}. Targets are split times for a ${LV.finish} men\u2019s finish, from HyroxDataLab race data.`;
+$("lvl").innerHTML=Object.keys(LEVELS).map(k=>`<button type="button" data-lvl="${k}" aria-pressed="${k===L}">${k}<small>${levelFinish(k)} finish</small></button>`).join("");
+$("lvlNote").textContent=`${L}: ${LV.note}. Every split adds up to a ${levelFinish(L)} men\u2019s finish: 8 km at ${fmtT(LV.run)}/km, the eight stations, and ${LV.rox} s per Roxzone transition.`;
 const runBest=(()=>{let b=null;state.bench.filter(x=>x.item==="1 km run"&&(x.athlete||"Axel")===state.who).forEach(x=>{if(b==null||x.seconds<b)b=x.seconds});return b})();
 let h="";
 STATIONS.forEach((st,i)=>{
@@ -644,13 +687,19 @@ const ymd=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice
 const addDays=(s,n)=>{const d=parseD(s);d.setDate(d.getDate()+n);return ymd(d)};
 const dayGap=(a,b)=>Math.round((parseD(b)-parseD(a))/864e5);
 const isMine=x=>(x.athlete||"Axel")===state.who;
-function trainingDates(){const set=new Set();[...state.sessions,...state.ergs,...state.bench].forEach(x=>{if(isMine(x)&&x.date)set.add(x.date)});return [...set].sort()}
+const REST="Rest";
+const notRest=x=>x.type!==REST;
+function restDates(){const s=new Set();state.sessions.forEach(x=>{if(isMine(x)&&!notRest(x)&&x.date)s.add(x.date)});return s}
+function restOn(ds){return state.sessions.find(x=>isMine(x)&&!notRest(x)&&x.date===ds)||null}
+function trainingDates(){const set=new Set();[...state.sessions,...state.ergs,...state.bench].forEach(x=>{if(isMine(x)&&notRest(x)&&x.date)set.add(x.date)});return [...set].sort()}
 function dayEntries(ds){const by=(a,b)=>(a.createdAt||"")<(b.createdAt||"")?-1:1;
-return [...state.sessions.filter(x=>isMine(x)&&x.date===ds).map(x=>({...x,kind:"session"})),...state.ergs.filter(x=>isMine(x)&&x.date===ds).map(x=>({...x,kind:"erg"})),...state.bench.filter(x=>isMine(x)&&x.date===ds).map(x=>({...x,kind:"bench"}))].sort(by)}
-function streaks(dates){let run=0,best=0,prev=null;for(const d of dates){run=prev&&dayGap(prev,d)<=2?run+1:1;best=Math.max(best,run);prev=d}
-const alive=prev&&dayGap(prev,today())<=2;return{cur:alive?run:0,best}}
+return [...state.sessions.filter(x=>isMine(x)&&notRest(x)&&x.date===ds).map(x=>({...x,kind:"session"})),...state.ergs.filter(x=>isMine(x)&&x.date===ds).map(x=>({...x,kind:"erg"})),...state.bench.filter(x=>isMine(x)&&x.date===ds).map(x=>({...x,kind:"bench"}))].sort(by)}
+function bridge(a,b,rest){for(let d=addDays(a,1);d<b;d=addDays(d,1))if(!rest.has(d))return false;return true}
+function linked(a,b,rest){return dayGap(a,b)<=2||bridge(a,b,rest)}
+function streaks(dates,rest){rest=rest||new Set();let run=0,best=0,prev=null;for(const d of dates){run=prev&&linked(prev,d,rest)?run+1:1;best=Math.max(best,run);prev=d}
+const alive=prev&&(dayGap(prev,today())<=2||bridge(prev,addDays(today(),1),rest));return{cur:alive?run:0,best}}
 function calPage(){
-const td=today(),all=trainingDates(),past=all.filter(d=>d<=td),st=streaks(past);
+const td=today(),all=trainingDates(),past=all.filter(d=>d<=td),rs=restDates(),st=streaks(past,rs);
 if(!state.calMonth)state.calMonth=td.slice(0,7);if(!state.calDay)state.calDay=td;
 const thisMo=past.filter(d=>d.startsWith(td.slice(0,7))).length;
 const cell=(l,v)=>`<div><span class="eyebrow">${l}</span><span class="big num">${v}<small>${v===1?"day":"days"}</small></span></div>`;
@@ -659,12 +708,12 @@ const [y,m]=state.calMonth.split("-").map(Number),first=new Date(y,m-1,1),lead=(
 $("calTitle").textContent=first.toLocaleDateString(undefined,{month:"long",year:"numeric"});
 let h="";for(let i=0;i<lead;i++)h+="<span></span>";
 for(let d=1;d<=n;d++){const ds=`${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`,c=dayEntries(ds).length,cls=["day"];
-if(c)cls.push("done");if(ds===td)cls.push("today");if(ds>td)cls.push("future");if(KEY_SIMS[ds]&&!c)cls.push("key");
-h+=`<button type="button" class="${cls.join(" ")}" data-day="${ds}" aria-pressed="${ds===state.calDay}" aria-label="${parseD(ds).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}${c?", "+c+" logged":""}"><span>${d}</span><span class="dots">${"<b></b>".repeat(Math.min(c,3))}</span></button>`}
+if(c)cls.push("done");else if(rs.has(ds))cls.push("rest");if(ds===td)cls.push("today");if(ds>td)cls.push("future");if(KEY_SIMS[ds]&&!c)cls.push("key");
+h+=`<button type="button" class="${cls.join(" ")}" data-day="${ds}" aria-pressed="${ds===state.calDay}" aria-label="${parseD(ds).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})}${c?", "+c+" logged":rs.has(ds)?", rest day":""}"><span>${d}</span><span class="dots">${c?"<b></b>".repeat(Math.min(c,3)):rs.has(ds)?"<b></b>":""}</span></button>`}
 $("calGrid").innerHTML=h;
 const moDays=all.filter(d=>d.startsWith(state.calMonth)).length;
 $("calMonthSum").textContent=`${moDays} training ${moDays===1?"day":"days"} this month`;
-dayDetail();monthRows();
+dayDetail();monthRows();seasonStats();
 }
 function dayDetail(){
 const ds=state.calDay,td=today(),raw=dayEntries(ds),pl=planFor(ds);
@@ -672,7 +721,7 @@ const used=new Set();raw.forEach(x=>{if(x.kind==="session"&&MACHINES.includes(x.
 const items=raw.filter(x=>!used.has(x));
 $("dayTitle").textContent=parseD(ds).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
 const planTxt=pl&&pl.title?`<div class="hint" style="padding-bottom:6px">Plan: ${esc(pl.title)}${pl.type?"":""}</div>`:"";
-if(!items.length){$("dayDetail").innerHTML=planTxt+`<div class="empty">${ds>=td?"Nothing logged yet.":"Nothing logged. Rest day."}</div>`;return}
+if(!items.length){const r=restOn(ds);$("dayDetail").innerHTML=planTxt+`<div class="empty">${r?"Rest day logged.":ds>=td?"Nothing logged yet.":"Nothing logged. Rest day."}</div>`;return}
 const km=items.reduce((a,x)=>a+(x.kind==="session"?Number(x.km)||0:0),0),min=items.reduce((a,x)=>a+(x.kind==="session"?Number(x.minutes)||0:0),0),em=raw.reduce((a,x)=>a+(x.kind==="erg"?Number(x.distance)||0:0),0);
 const chips=[min?`${min} min`:"",km?`${Math.round(km*10)/10} km run`:"",em?`${em} m on ergs`:""].filter(Boolean).map(t=>`<span class="chip">${t}</span>`).join("");
 $("dayDetail").innerHTML=planTxt+(chips?`<div class="day-sum">${chips}</div>`:"")+items.map(x=>{
@@ -688,11 +737,11 @@ else{tag="Test";main=`${esc(x.item)} · <span class="num">${fmtT(x.seconds)}</sp
 return `<div class="item nodel"><span class="tag">${esc(tag)}</span><button type="button" class="item-main" data-edit="${x.kind}" data-id="${esc(x.id)}" aria-label="Edit entry"><div>${main}</div>${meta?`<div class="meta">${meta}</div>`:""}${x.note?`<div class="note">${esc(x.note)}</div>`:""}</button></div>`}).join("");
 }
 function monthRows(){
-const td=parseD(today());let rows="";
-const firstMo=(trainingDates()[0]||today()).slice(0,7);
+const td=parseD(today()),TD=trainingDates();let rows="";
+const firstMo=(TD[0]||today()).slice(0,7);
 for(let i=0;i<6;i++){const d=new Date(td.getFullYear(),td.getMonth()-i,1),k=ymd(d).slice(0,7);if(k<firstMo)break;
-const S=state.sessions.filter(x=>isMine(x)&&x.date&&x.date.startsWith(k)),E=state.ergs.filter(x=>isMine(x)&&x.date&&x.date.startsWith(k));
-const days=trainingDates().filter(x=>x.startsWith(k)).length;
+const S=state.sessions.filter(x=>isMine(x)&&notRest(x)&&x.date&&x.date.startsWith(k)),E=state.ergs.filter(x=>isMine(x)&&x.date&&x.date.startsWith(k));
+const days=TD.filter(x=>x.startsWith(k)).length;
 const km=S.reduce((a,x)=>a+(Number(x.km)||0),0),em=E.reduce((a,x)=>a+(Number(x.distance)||0),0);
 rows+=`<tr><td>${d.toLocaleDateString(undefined,{month:"short",year:"numeric"})}</td><td class="r num">${days}</td><td class="r num">${S.length+E.length}</td><td class="r num">${Math.round(km*10)/10}</td><td class="r num">${em.toLocaleString()}</td></tr>`}
 $("monthRows").innerHTML=rows;
@@ -703,10 +752,10 @@ Consistency:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
 "Race countdown":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>',
 Variety:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>'};
 function badgeGroups(){
-const td=today(),S=state.sessions.filter(isMine),E=state.ergs.filter(isMine),B=state.bench.filter(isMine);
+const td=today(),rs=restDates(),S=state.sessions.filter(x=>isMine(x)&&notRest(x)),E=state.ergs.filter(isMine),B=state.bench.filter(isMine);
 const dates=trainingDates().filter(d=>d<=td),byDate=(a,b)=>a.date<b.date?-1:a.date>b.date?1:0;
 const firstDate=arr=>{const r=arr.filter(x=>x.date).sort(byDate);return r.length?r[0].date:null};
-const streakHit=n=>{let run=0,prev=null;for(const d of dates){run=prev&&dayGap(prev,d)<=2?run+1:1;prev=d;if(run>=n)return d}return null};
+const streakHit=n=>{let run=0,prev=null;for(const d of dates){run=prev&&linked(prev,d,rs)?run+1:1;prev=d;if(run>=n)return d}return null};
 const bestWeek=()=>{const wk={};let best=0,hit=null;for(const d of dates){const k=ymd(weekStart(d));wk[k]=(wk[k]||0)+1;if(wk[k]>best)best=wk[k];if(wk[k]>=6&&!hit)hit=d}return{best,hit}};
 const real1000=mc=>[...E.filter(e=>e.machine===mc&&Number(e.distance)===1000).map(e=>({date:e.date,s:Number(e.seconds)})),...B.filter(b=>b.item===(mc==="SkiErg"?"SkiErg 1000 m":"Row 1000 m")).map(b=>({date:b.date,s:Number(b.seconds)}))].sort(byDate);
 const under=(mc,sec)=>{const r=real1000(mc).find(x=>x.s<=sec);return r?r.date:null};
@@ -718,7 +767,7 @@ const onDate=(ms,label)=>({date:td>=ms&&trainedBefore(ms)?ms:null,prog:td<ms?`In
 const finisher=(from,to)=>{const r=B.filter(b=>b.item==="Full race"&&b.date>=from&&b.date<=to).sort(byDate);return r.length?r[0].date:null};
 const types=TYPES.filter(t=>t!=="Other"),doneTypes=new Set(S.map(x=>x.type).filter(t=>types.includes(t)));
 const cnt=(n,label)=>({id:"days"+n,name:label,desc:`${n} training days logged`,date:dates[n-1]||null,cur:Math.min(dates.length,n),max:n});
-const wk=bestWeek(),sk=streaks(dates);
+const wk=bestWeek(),sk=streaks(dates,rs);
 const fmtS=t=>fmtT(t);
 return [
 {name:"Consistency",items:[
@@ -765,8 +814,13 @@ return `<div class="badge${b.date?" got":""}"><div class="medal">${BADGE_ICONS[g
 const SIMK="hyrox-sim";
 function simGet(){try{return JSON.parse(localStorage.getItem(SIMK)||"null")}catch(e){return null}}
 function simPut(v){try{if(v)localStorage.setItem(SIMK,JSON.stringify(v));else localStorage.removeItem(SIMK)}catch(e){}}
-function simSegs(sim){const LV=LEVELS[sim.level]||LEVELS.Moderate,n=sim.mode==="half"?4:8,out=[];
-for(let i=0;i<n;i++){out.push({name:`Run ${i+1}`,spec:"1 km",t:LV.run,run:true});out.push({name:STATIONS[i].name,spec:STATIONS[i].spec,t:LV.st[i],st:i})}return out}
+const roxWanted=()=>{try{return localStorage.getItem("hyrox-rox")!=="0"}catch(e){return true}};
+const roxSet=v=>{try{localStorage.setItem("hyrox-rox",v?"1":"0")}catch(e){}};
+const hadRox=(mode,len)=>len===(mode==="half"?12:24);
+function simSegs(sim){const LV=LEVELS[sim.level]||LEVELS.Moderate,n=sim.mode==="half"?4:8,out=[],rox=!!sim.rox,rt=LV.rox||40;
+for(let i=0;i<n;i++){out.push({name:`Run ${i+1}`,spec:"1 km",t:rox?LV.run:LV.run+rt,run:true});
+if(rox)out.push({name:`Roxzone ${i+1}`,spec:"run to station",t:rt,rox:true});
+out.push({name:STATIONS[i].name,spec:STATIONS[i].spec,t:LV.st[i],st:i})}return out}
 const simEl=(sim,now)=>((sim.paused||now)-sim.start-(sim.pauseTotal||0));
 const simDurs=sim=>sim.splits.map((v,i)=>Math.round((v-(i?sim.splits[i-1]:0))/1000));
 let simTimer=null,wake=null;
@@ -774,10 +828,11 @@ async function keepAwake(on){try{if(on&&"wakeLock" in navigator){wake=await navi
 function simSection(){
 state.simMode=state.simMode||"full";
 seg($("simMode"),["Full race","Half race"],()=>state.simMode==="full"?"Full race":"Half race",v=>state.simMode=v==="Full race"?"full":"half");
-const L=getLevel(),LV=LEVELS[L],segs=simSegs({mode:state.simMode,level:L}),tot=segs.reduce((a,x)=>a+x.t,0);
-$("simHint").textContent=`${state.simMode==="full"?"8 runs + 8 stations":"4 runs + first 4 stations"} · ${L} target ${fmtT(tot)}. Tap Split as you finish each run and station. Roxzone time counts in the runs.`;
+const L=getLevel(),LV=LEVELS[L],rox=roxWanted(),segs=simSegs({mode:state.simMode,level:L,rox}),tot=segs.reduce((a,x)=>a+x.t,0);
+$("simRox").checked=rox;
+$("simHint").textContent=`${state.simMode==="full"?"8 runs":"4 runs"} + ${state.simMode==="full"?"8 stations":"first 4 stations"}${rox?" + a Roxzone tap between each":""} · ${L} target ${fmtT(tot)}. `+(rox?`Tap Split when you finish the run, again when you reach the station, again when the station is done. The run target is a clean ${fmtT(LV.run)}/km with ${LV.rox} s alongside it for the transition, so the total target is the same either way. Walking out of a station still counts in the next run.`:"Tap Split as you finish each run and station. Roxzone time counts in the runs.");
 const sims=state.bench.filter(b=>isMine(b)&&(b.item==="Full race"||b.item==="Half simulation")).sort((a,b)=>a.date<b.date?1:-1).slice(0,6);
-$("simHistory").innerHTML=sims.length?`<div class="eyebrow" style="margin-top:4px">Past simulations</div>`+sims.map(b=>{const t=simSegs({mode:b.item==="Full race"?"full":"half",level:L}).reduce((a,x)=>a+x.t,0),dl=b.seconds-t;
+$("simHistory").innerHTML=sims.length?`<div class="eyebrow" style="margin-top:4px">Past simulations</div>`+sims.map(b=>{const md=b.item==="Full race"?"full":"half",t=simSegs({mode:md,level:L,rox:hadRox(md,(b.splits||[]).length)}).reduce((a,x)=>a+x.t,0),dl=b.seconds-t;
 return `<div class="item nodel"><span class="tag">${b.item==="Full race"?"Full":"Half"}</span><button type="button" class="item-main" data-sim="${esc(b.id)}"><div><span class="num">${fmtT(b.seconds)}</span> <span class="${dl<=0?"delta-ok":"delta-bad"}">${dl<=0?"−":"+"}${fmtT(Math.abs(dl))}</span></div><div class="meta">${fmtD(b.date)} · vs ${L} target${b.splits&&b.splits.length?" · tap for splits":""}</div></button></div>`}).join(""):"";
 }
 function simOpen(){const sim=simGet();if(!sim)return;$("sim").hidden=false;document.body.style.overflow="hidden";keepAwake(true);clearInterval(simTimer);simTimer=setInterval(simTick,250);simTick()}
@@ -788,7 +843,7 @@ $("simLevel").textContent=`${sim.mode==="half"?"Half":"Full"} race · ${sim.leve
 $("simTotal").textContent=fmtT(el/1000);
 const doneT=segs.slice(0,i).reduce((a,x)=>a+x.t,0),dl=i?Math.round(last/1000)-doneT:0;
 $("simProj").innerHTML=i?`<span class="${dl<=0?"good-t":"bad-t"}">${dl<=0?"−":"+"}${fmtT(Math.abs(dl))}</span> vs target after ${i} of ${segs.length}`:"";
-if(cur){$("simStep").textContent=`${cur.run?"Run":"Station"} · ${i+1} of ${segs.length}`;$("simName").textContent=cur.name;
+if(cur){$("simStep").textContent=`${cur.run?"Run":cur.rox?"Roxzone":"Station"} · ${i+1} of ${segs.length}`;$("simName").textContent=cur.name;
 const st=(el-last)/1000;$("simSegTime").textContent=fmtT(st);$("simSegTime").className="sim-segtime num"+(st>cur.t?" bad-t":"");
 $("simTarget").textContent=`${cur.spec} · target ${fmtT(cur.t)}`;const nx=segs[i+1];$("simNext").textContent=nx?`Next: ${nx.name}`:"Last one. Finish strong";}
 $("simPause").textContent=sim.paused?"Resume":"Pause";$("simUndo").disabled=!i;$("simSplit").disabled=!!sim.paused;
@@ -797,8 +852,10 @@ const durs=simDurs(sim);$("simLog").innerHTML=durs.map((d,k)=>{const x=d-segs[k]
 function simSummary(sim){
 const segs=simSegs(sim),durs=simDurs(sim),n=durs.length,complete=n===segs.length,total=durs.reduce((a,b)=>a+b,0),tgt=segs.slice(0,n).reduce((a,x)=>a+x.t,0),dl=total-tgt;
 const rows=durs.map((d,k)=>{const x=d-segs[k].t;return `<tr><td>${esc(segs[k].name)}</td><td class="r num">${fmtT(d)}</td><td class="r num">${fmtT(segs[k].t)}</td><td class="r num"><span class="${x<=0?"delta-ok":"delta-bad"}">${x<0?"−":x>0?"+":"±"}${fmtT(Math.abs(x))}</span></td></tr>`}).join("");
-const stations=segs.slice(0,n).filter(x=>!x.run).length;
-openSheet(sheetHead(complete?"Simulation done":"Save partial simulation")+`<div class="board"><div><span class="eyebrow">Total</span><span class="big num">${fmtT(total)}</span></div><div><span class="eyebrow">vs ${esc(sim.level)} target</span><span class="big num ${dl<=0?"delta-ok":"delta-bad"}">${dl<=0?"−":"+"}${fmtT(Math.abs(dl))}</span></div></div>
+const stations=segs.slice(0,n).filter(x=>x.st!=null).length;
+const rIdx=segs.map((x,k)=>x.rox?k:-1).filter(k=>k>=0&&k<n),rTot=rIdx.reduce((a,k)=>a+durs[k],0),rTgt=rIdx.reduce((a,k)=>a+segs[k].t,0);
+const roxLine=rIdx.length?`<div class="hint">Roxzone ${fmtT(rTot)} across ${rIdx.length} ${rIdx.length===1?"transition":"transitions"} · ${Math.round(rTot/rIdx.length)} s average against a ${Math.round(rTgt/rIdx.length)} s target</div>`:"";
+openSheet(sheetHead(complete?"Simulation done":"Save partial simulation")+`<div class="board"><div><span class="eyebrow">Total</span><span class="big num">${fmtT(total)}</span></div><div><span class="eyebrow">vs ${esc(sim.level)} target</span><span class="big num ${dl<=0?"delta-ok":"delta-bad"}">${dl<=0?"−":"+"}${fmtT(Math.abs(dl))}</span></div></div>${roxLine}
 ${n?`<table><thead><tr><th>Split</th><th class="r">Time</th><th class="r">Target</th><th class="r">±</th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="empty">No splits yet.</div>`}
 <form id="simSave" style="gap:10px">${stations?`<label class="check"><input type="checkbox" id="simBench" checked> Save my ${stations} station ${stations===1?"time":"times"} as benchmarks</label>`:""}
 <label>Effort<select id="simEffort"><option value="0">-</option><option>3</option><option>4</option><option selected>5</option></select></label>
@@ -809,11 +866,12 @@ $("simSave").onsubmit=async e=>{e.preventDefault();const date=today(),runs=segs.
 let ok=await add("sessions",{date,type:"Simulation",km:runs,minutes:Math.max(1,Math.round(total/60)),effort:+$("simEffort").value||0,soreness:0,note:`${label} ${fmtT(total)} (${dl<=0?"−":"+"}${fmtT(Math.abs(dl))} vs ${sim.level})`});
 if(!ok)return;
 if(complete)ok=await add("benchmarks",{date,item:sim.mode==="full"?"Full race":"Half simulation",seconds:total,splits:durs,note:`Simulation · ${sim.level} targets`});
-if(ok&&$("simBench")&&$("simBench").checked){for(let k=0;k<n;k++){const x=segs[k];if(!x.run&&durs[k]>=20)await add("benchmarks",{date,item:STATIONS[x.st].test,seconds:durs[k],note:"From race simulation"})}}
+if(ok&&$("simBench")&&$("simBench").checked){for(let k=0;k<n;k++){const x=segs[k];if(x.st!=null&&durs[k]>=20)await add("benchmarks",{date,item:STATIONS[x.st].test,seconds:durs[k],note:"From race simulation"})}}
 simPut(null);closeSheet();simClose();render();toast("Simulation saved",true)};
 }
 function simSplitsSheet(id){const b=state.bench.find(x=>x.id===id);if(!b)return;
-const segs=simSegs({mode:b.item==="Full race"?"full":"half",level:getLevel()});
+const md=b.item==="Full race"?"full":"half";
+const segs=simSegs({mode:md,level:getLevel(),rox:hadRox(md,(b.splits||[]).length)});
 const rows=(b.splits||[]).map((d,k)=>segs[k]?`<tr><td>${esc(segs[k].name)}</td><td class="r num">${fmtT(d)}</td><td class="r num">${fmtT(segs[k].t)}</td></tr>`:"").join("");
 openSheet(sheetHead(`${esc(b.item)} · ${fmtD(b.date)}`)+`<div class="big num" style="font:800 40px var(--display)">${fmtT(b.seconds)}</div>${rows?`<table><thead><tr><th>Split</th><th class="r">Time</th><th class="r">${esc(getLevel())}</th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="empty">No splits saved for this one.</div>`}<button type="button" class="ghost" data-editbench="${esc(b.id)}">Edit or delete</button>`)}
 // ===== Weak stations =====
@@ -835,28 +893,43 @@ let tip="No times yet";if(a!=null&&n!=null){const d=a-n;tip=d===0?"Even":`${d<0?
 if(a!=null&&n!=null)tip=`Axel ${fmtT(a)} · Noé ${fmtT(n)} · ${tip}`;
 return `<div class="dbl"><div class="dbl-top"><b>${esc(st.name)}</b><span class="hint">${esc(tip)}</span></div><div class="seg" role="group" aria-label="${esc(st.name)} lead">${["Axel","Noé","Split"].map(o=>`<button type="button" data-dbl="${esc(st.name)}" data-lead="${o}" aria-pressed="${cur===o}">${o==="Split"?"Split it":o+" leads"}</button>`).join("")}</div></div>`}).join("");
 }
+// ===== Volume totals =====
+const fmtH=m=>m>=60?`${Math.floor(m/60)}h${m%60?" "+(m%60)+"m":""}`:`${m} min`;
+const volCell=(l,v)=>`<div><span class="eyebrow">${l}</span><span class="v">${v}</span></div>`;
+function volume(pick){const A=state.sessions.filter(x=>isMine(x)&&x.date&&pick(x.date)),S=A.filter(notRest),E=state.ergs.filter(x=>isMine(x)&&x.date&&pick(x.date)),B=state.bench.filter(x=>isMine(x)&&x.date&&pick(x.date));
+const solo=E.filter(e=>!S.some(x=>x.date===e.date&&x.type===e.machine));
+return{S,E,B,solo,rest:A.length-S.length,km:S.reduce((a,x)=>a+(+x.km||0),0),mins:S.reduce((a,x)=>a+(+x.minutes||0),0),em:E.reduce((a,x)=>a+(+x.distance||0),0),count:S.length+solo.length}}
+function seasonStats(){
+const td=today(),v=volume(d=>d<=td),dates=trainingDates().filter(d=>d<=td),first=dates[0];
+const cell=(l,val,u)=>`<div><span class="eyebrow">${l}</span><span class="big num${String(val).length>6?" sm":""}">${val}${u?`<small>${u}</small>`:""}</span></div>`;
+$("seasonStats").innerHTML=cell("Running",Math.round(v.km*10)/10,"km")+cell("Ergs",v.em.toLocaleString(),"m")+cell("Time trained",Math.round(v.mins/60),"h")+cell("Sessions",v.count,"");
+$("seasonNote").textContent=first?`${dates.length} training ${dates.length===1?"day":"days"}${v.rest?` and ${v.rest} rest ${v.rest===1?"day":"days"}`:""} over ${Math.max(1,Math.ceil((dayGap(first,td)+1)/7))} weeks, since ${fmtD(first)}. Totals are ${state.who}\u2019s logged entries only.`:"Nothing logged yet.";
+}
 // ===== Week: plan vs done =====
 function weekPlan(){
 const off=state.weekOff||0,td=today(),mon=addDays(ymd(weekStart(td)),7*off);
 $("wkTitle").textContent=off===0?"This week":off===-1?"Last week":`Week of ${fmtD(mon)}`;$("wkNext").disabled=off>=1;
-let planned=0,done=0,days=0,h="";
-for(let k=0;k<7;k++){const d=addDays(mon,k),pl=planFor(d),items=dayEntries(d),logged=items.length>0,types=[...new Set(items.map(x=>x.kind==="session"?x.type:x.kind==="erg"?x.machine:"Test"))];
+let planned=0,done=0,days=0,rested=0,h="";const rs=restDates();
+for(let k=0;k<7;k++){const d=addDays(mon,k),pl=planFor(d),items=dayEntries(d),logged=items.length>0,rest=rs.has(d)&&!logged,types=[...new Set(items.map(x=>x.kind==="session"?x.type:x.kind==="erg"?x.machine:"Test"))];
 if(logged&&d<=td)days++;
+if(rest&&d<=td)rested++;
 let chip,cls="chip";
-if(pl.type){if(d<td||(d===td&&logged)){planned++;if(logged)done++}}
-if(logged){chip="Done";cls="chip ok"}else if(!pl.type){chip="Rest"}else if(d<td){chip="Missed";cls="chip warn"}else if(d===td){chip="Today";cls="chip key"}else chip="Upcoming";
-h+=`<button type="button" class="wk-row${d===td?" today":""}" data-wk="${d}"><span class="wk-day">${parseD(d).toLocaleDateString(undefined,{weekday:"short"})}<small>${fmtD(d)}</small></span><span><div>${esc(pl.title||"Rest")}${pl.key?" · key":""}</div>${logged?`<div class="meta">Logged: ${esc(types.join(", "))}</div>`:""}</span><span class="${cls}">${chip}</span></button>`}
+if(pl.type&&!rest){if(d<td||(d===td&&logged)){planned++;if(logged)done++}}
+if(logged){chip="Done";cls="chip ok"}else if(rest){chip="Rest";cls="chip ok"}else if(!pl.type){chip="Rest"}else if(d<td){chip="Missed";cls="chip warn"}else if(d===td){chip="Today";cls="chip key"}else chip="Upcoming";
+h+=`<button type="button" class="wk-row${d===td?" today":""}" data-wk="${d}"><span class="wk-day">${parseD(d).toLocaleDateString(undefined,{weekday:"short"})}<small>${fmtD(d)}</small></span><span><div>${esc(pl.title||"Rest")}${pl.key?" · key":""}</div>${logged?`<div class="meta">Logged: ${esc(types.join(", "))}</div>`:rest?`<div class="meta">Rest day logged</div>`:""}</span><span class="${cls}">${chip}</span></button>`}
 $("wkList").innerHTML=h;
 const pct=planned?Math.round(done/planned*100):null;
-$("wkSum").textContent=`${done} of ${planned} planned sessions done · ${days} training ${days===1?"day":"days"}`;
+$("wkSum").textContent=`${done} of ${planned} planned sessions done · ${days} training ${days===1?"day":"days"}${rested?` · ${rested} rest`:""}`;
 $("wkPct").textContent=pct==null?"No plan due yet":pct+"% of plan";$("wkPct").className="chip"+(pct==null?"":pct>=80?" ok":pct<50?" warn":"");
+const sun=addDays(mon,6),v=volume(d=>d>=mon&&d<=sun);
+$("wkVol").innerHTML=volCell("Run",v.km?`${Math.round(v.km*10)/10} km`:"\u2013")+volCell("Erg",v.em?v.em.toLocaleString()+" m":"\u2013")+volCell("Time",v.mins?fmtH(v.mins):"\u2013")+volCell("Days",`${days}/7`);
 }
 // ===== Weekly recap card =====
 async function recapCard(){
 const off=state.weekOff||0,td=today(),mon=addDays(ymd(weekStart(td)),7*off),sun=addDays(mon,6),inWk=d=>d>=mon&&d<=sun;
-const S=state.sessions.filter(x=>isMine(x)&&inWk(x.date)),E=state.ergs.filter(x=>isMine(x)&&inWk(x.date)),B=state.bench.filter(x=>isMine(x)&&inWk(x.date));
+const S=state.sessions.filter(x=>isMine(x)&&notRest(x)&&inWk(x.date)),E=state.ergs.filter(x=>isMine(x)&&inWk(x.date)),B=state.bench.filter(x=>isMine(x)&&inWk(x.date));
 const days=trainingDates().filter(inWk).length,mins=S.reduce((a,x)=>a+(+x.minutes||0),0),km=S.reduce((a,x)=>a+(+x.km||0),0),em=E.reduce((a,x)=>a+(+x.distance||0),0);
-const st=streaks(trainingDates().filter(d=>d<=(sun<td?sun:td)));
+const st=streaks(trainingDates().filter(d=>d<=(sun<td?sun:td)),restDates());
 const bestIn=m=>{const p=ergPoints(m).filter(x=>inWk(x.date));return p.length?Math.min(...p.map(x=>x.v)):null};
 const badges=badgeGroups().flatMap(g=>g.items).filter(b=>b.date&&inWk(b.date)).map(b=>b.name);
 const toVer=Math.max(0,dayGap(td,"2027-01-28"));
@@ -868,10 +941,10 @@ x.fillStyle=G;x.font=`600 34px ${P}`;x.fillText(`HYROX TRAINING · ${fmtD(mon).t
 x.fillStyle="#fff";x.font=`800 150px ${D}`;x.fillText(state.who.toUpperCase(),80,300);
 x.fillStyle=Y;x.fillRect(80,360,920,440);
 x.fillStyle=K;x.font=`800 300px ${D}`;x.fillText(`${days}/7`,120,680);x.font=`700 56px ${D}`;x.fillText("TRAINING DAYS",130,760);
-{let planned=0,done=0;for(let k=0;k<7;k++){const d=addDays(mon,k),pl=planFor(d),lg=dayEntries(d).length>0;if(pl.type&&(d<td||(d===td&&lg))){planned++;if(lg)done++}}
+{let planned=0,done=0;const rs=restDates();for(let k=0;k<7;k++){const d=addDays(mon,k),pl=planFor(d),lg=dayEntries(d).length>0;if(pl.type&&!(rs.has(d)&&!lg)&&(d<td||(d===td&&lg))){planned++;if(lg)done++}}
 if(planned){x.textAlign="right";x.font=`800 150px ${D}`;x.fillText(Math.round(done/planned*100)+"%",960,560);x.font=`700 44px ${D}`;x.fillText("OF PLAN DONE",960,620);x.textAlign="left"}}
 const box=(bx,by,label,val)=>{x.strokeStyle="#2A2A2A";x.lineWidth=3;x.strokeRect(bx,by,445,230);x.fillStyle=G;x.font=`600 30px ${P}`;x.fillText(label,bx+34,by+66);x.fillStyle="#fff";x.font=`800 110px ${D}`;x.fillText(val,bx+34,by+190)};
-box(80,850,"SESSIONS",String(S.length+E.length+B.length));box(555,850,"MINUTES",String(mins));
+box(80,850,"SESSIONS",String(S.length+E.filter(e=>!S.some(x=>x.date===e.date&&x.type===e.machine)).length));box(555,850,"MINUTES",String(mins));
 box(80,1110,"HOT STREAK",`${st.cur} ${st.cur===1?"DAY":"DAYS"}`);box(555,1110,em?"ERG METERS":"RUN KM",em?em.toLocaleString():String(Math.round(km*10)/10));
 let y=1440;x.font=`500 38px ${M}`;
 [["SkiErg",bestIn("SkiErg")],["Row",bestIn("Row")]].forEach(([m,v])=>{if(v!=null){x.fillStyle=G;x.fillText(`${m} best 1000 m`,80,y);x.fillStyle="#fff";x.textAlign="right";x.fillText(fmtT(v),1000,y);x.textAlign="left";y+=62}});
@@ -1002,6 +1075,10 @@ b.onclick=()=>{state[key]=String(state[key])===o?0:+o;[...el.children].forEach(c
 scaleSeg($("sEffort"),"effort");scaleSeg($("sSore"),"sore");
 $("tLog").onclick=()=>{const pl=planFor(today());if(!pl.type)return;state.type=pl.type;seg($("types"),TYPES,()=>state.type,v=>{state.type=v;syncErg()});syncErg();
 $("sDate").value=today();$("sNote").value=pl.title;growNote();$("fSession").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});setTimeout(()=>$("sKm").focus({preventScroll:true}),350)};
+$("tRest").onclick=async()=>{const rb=$("tRest"),id=rb.dataset.undo;rb.disabled=true;
+try{if(id){if(await remove("session",id))toast("Rest day removed")}
+else if(await add("sessions",{date:today(),type:REST,km:0,minutes:0,effort:0,soreness:0,note:"Rest day"}))toast("Rest day logged. It won\u2019t count against your plan.")}
+finally{rb.disabled=false}};
 $("bItem").innerHTML=TESTS.map(t=>`<option>${t}</option>`).join("");
 $("sDate").value=today();$("bDate").value=today();
 $("fSession").onsubmit=async e=>{e.preventDefault();
@@ -1043,7 +1120,8 @@ seg($("who"),WHO,()=>state.who,v=>state.who=v);acctBtn();
 $("acct").onclick=()=>openSignIn();
 $("sheet").addEventListener("click",e=>{if(e.target.id==="sheet"||e.target.closest("[data-close]"))closeSheet();const eb=e.target.closest("[data-editbench]");if(eb){openEdit("bench",eb.dataset.editbench)}});
 $("dayDetail").onclick=e=>{const b=e.target.closest("[data-edit]");if(b)openEdit(b.dataset.edit,b.dataset.id)};
-$("simStart").onclick=()=>{simPut({mode:state.simMode||"full",level:getLevel(),start:Date.now(),splits:[],paused:null,pauseTotal:0});simOpen()};
+$("simRox").onchange=()=>{roxSet($("simRox").checked);simSection()};
+$("simStart").onclick=()=>{simPut({mode:state.simMode||"full",level:getLevel(),rox:roxWanted(),start:Date.now(),splits:[],paused:null,pauseTotal:0});simOpen()};
 $("simSplit").onclick=()=>{const sim=simGet();if(!sim||sim.paused)return;const el=simEl(sim,Date.now()),prev=sim.splits.length?sim.splits[sim.splits.length-1]:0;if(el-prev<3000){toast("Double tap ignored");return}sim.splits.push(el);simPut(sim);try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
 if(sim.splits.length===simSegs(sim).length){clearInterval(simTimer);simTick();simSummary(sim)}else simTick()};
 $("simUndo").onclick=()=>{const sim=simGet();if(!sim||!sim.splits.length)return;sim.splits.pop();simPut(sim);simTick()};
