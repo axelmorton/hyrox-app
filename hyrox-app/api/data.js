@@ -47,7 +47,7 @@ function clean(col, item) {
       if (!rule[1].includes(v)) return null;
       out[key] = v;
     } else if (t === "splits") {
-      if (!Array.isArray(v) || v.length > 16) return null;
+      if (!Array.isArray(v) || v.length > 24) return null; // 8 runs + 8 stations, + 8 Roxzone legs when timed separately
       const arr = v.map(Number);
       if (arr.some(n => !Number.isFinite(n) || n < 0 || n > 100000)) return null;
       out[key] = arr;
