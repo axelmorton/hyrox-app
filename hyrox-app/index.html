@@ -53,6 +53,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
 .board .big{font-family:var(--display);font-size:40px;font-weight:800;line-height:1}
 .board .big.sm{font-size:30px}
 .board .big small{font-size:16px;font-weight:600;color:var(--muted);margin-left:4px}
+.board .wide{grid-column:1/-1}
 .phase{grid-column:1/-1}
 .phase .big{color:var(--accent);align-self:flex-start;background:linear-gradient(transparent 62%,var(--band) 62%);padding-inline:2px}
 section{display:flex;flex-direction:column;gap:10px}
@@ -235,7 +236,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="wrap">
 <header>
 <div>
-<div class="eyebrow">HYROX 2027 · Verona solo · Madrid doubles</div>
+<div class="eyebrow">HYROX 2027 · Madrid doubles · 17 March</div>
 <h1>HYROX</h1>
 </div>
 <div class="head-right"><div class="theme" role="group" aria-label="Appearance" id="theme"><button type="button" data-t="auto">Auto</button><button type="button" data-t="light">Light</button><button type="button" data-t="dark">Dark</button></div><div class="status" id="status">Connecting…</div><button type="button" class="chip acct" id="acct">Sign in</button></div>
@@ -243,12 +244,10 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="who-row"><span class="eyebrow">Viewing</span><div class="seg" role="group" aria-label="Viewing athlete" id="who"></div></div>
 <div id="pgTrain" class="page">
 <div class="board" aria-label="Race countdown">
-<div><span class="eyebrow">Verona · Jan 28</span><span class="big num" id="dVer">-</span></div>
-<div><span class="eyebrow">Madrid · Mar 17</span><span class="big num" id="dMad">-</span></div>
+<div class="wide"><span class="eyebrow">Madrid · Doubles Men · Mar 17</span><span class="big num" id="dMad">-</span></div>
 <div class="phase"><span class="eyebrow" id="phaseDates">Current phase</span><span class="big" id="phase">-</span><span class="status" id="phaseFocus"></span></div>
 </div>
 <div class="rules">
-<a class="rulelink" href="https://maintain.hyrox.com/rulebooks/HYROX_RulebookSingles_EN.pdf" target="_blank" rel="noopener"><span class="ic">PDF</span><span>Singles rulebook<small>Verona · official 26/27</small></span></a>
 <a class="rulelink" href="https://maintain.hyrox.com/rulebooks/HYROX_RulebookDoubles_EN.pdf" target="_blank" rel="noopener"><span class="ic">PDF</span><span>Doubles rulebook<small>Madrid · official 26/27</small></span></a>
 </div>
 <section>
@@ -444,37 +443,28 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <dialog id="sheet" class="sheet"><div id="sheetBody"></div></dialog>
 <div class="toast" id="toast" hidden></div>
 <script>
-const TYPES=["Easy run","Intervals","Compromised","Strength","Simulation","SkiErg","Row","Other"];
+const TYPES=["Easy run","Intervals","Compromised","Strength","HIIT class","Simulation","SkiErg","Row","Other"];
 const TESTS=["1 km run","SkiErg 1000 m","Sled Push 50 m","Sled Pull 50 m","Burpee Broad Jump 80 m","Row 1000 m","Farmers Carry 200 m","Sandbag Lunges 100 m","Wall Balls 100","Full race","Half simulation"];
 const WHO=["Axel","Noé"];
 const PHASES=[
 ["2026-09-15","2026-10-26","Base","Aerobic base, station technique, strength foundation"],
-["2026-10-27","2026-12-07","Build","Race-pace running, heavier sleds, harder compromised work"],
-["2026-12-08","2027-01-11","Race-specific","Simulations at race weight, pacing, transitions"],
-["2027-01-12","2027-01-27","Taper","Volume down 30-50%, keep some intensity"],
-["2027-01-28","2027-01-31","Verona race week","Race solo. Save your splits here after"],
-["2027-02-01","2027-02-08","Recover","Easy running and mobility only"],
-["2027-02-09","2027-02-22","Rebuild","Attack the weakest Verona splits"],
-["2027-02-23","2027-03-07","Doubles-specific","Train with your partner, full doubles sim"],
-["2027-03-08","2027-03-16","Taper","Volume down, stay sharp"],
+["2026-10-27","2026-12-20","Build","Race-pace running, heavier sleds, harder compromised work"],
+["2026-12-21","2027-02-07","Race-specific","Simulations at race weight, pacing, transitions. Works around the holidays"],
+["2027-02-08","2027-03-07","Doubles-specific","Train with Noé, practise switches, full doubles sim"],
+["2027-03-08","2027-03-16","Taper","Volume down 30-50%, keep some intensity"],
 ["2027-03-17","2027-03-21","Madrid race week","Doubles Men"]
 ];
 const state={sessions:[],bench:[],ergs:[],who:"Axel",type:"Easy run",effort:0,sore:0,machine:"SkiErg"};
 const MACHINES=["SkiErg","Row"];
-const KEY_SIMS={"2026-10-24":"Benchmark race simulation (week 6). Full race at race weights, record every split.","2026-12-19":"Benchmark race simulation (week 14). Full race at race weights, compare to week 6.","2027-02-27":"Full doubles simulation with your partner, planned splits."};
+const KEY_SIMS={"2026-10-24":"Benchmark race simulation. Full race at race weights, record every split.","2026-12-19":"Benchmark race simulation. Full race at race weights, compare to October.","2027-01-30":"Full race simulation at race weights. Your main data point before the doubles block, so record every split.","2027-02-27":"Full doubles simulation with Noé, using your planned splits."};
 function planFor(ds){
 const d=parseD(ds),wd=(d.getDay()+6)%7,p=PHASES.find(p=>ds>=p[0]&&ds<=p[1]),ph=p?p[2]:"Base";
 if(KEY_SIMS[ds])return{type:"Simulation",title:"Race simulation",detail:KEY_SIMS[ds],key:true};
-if(ph==="Verona race week"||ph==="Madrid race week"){
-const race=ph.startsWith("Verona")?"Verona":"Madrid";
-return wd===6?{type:null,title:"Rest",detail:"Recover and walk."}:{type:"Easy run",title:`${race} race week`,detail:"Race on your wave day. Other days: 20 min easy jog with 3 short strides, or rest. Log your splits as benchmarks after."};
-}
-if(ph==="Recover")return wd===6?{type:null,title:"Rest",detail:"Full rest."}:{type:"Easy run",title:"Easy recovery",detail:"20 to 40 min very easy run, bike or walk, plus mobility. Nothing hard until soreness is gone."};
+if(ph==="Madrid race week")return wd===6?{type:null,title:"Rest",detail:"Recover and walk."}:{type:"Easy run",title:"Madrid race week",detail:"Race on your wave day. Other days: 20 min easy jog with 3 short strides, or rest. Log your splits as benchmarks after."};
 const taper=ph==="Taper";
-const iv={Base:"5 x 3 min hard, 2 min easy jog between",Build:"6 x 1 km at goal race pace, 90 s rest","Race-specific":"8 x 1 km at race pace, 60 s rest","Rebuild":"6 x 1 km at race pace, 90 s rest","Doubles-specific":"6 x 1 km at your shared race pace, 60 s rest",Taper:"4 x 1 km at race pace, full recovery"}[ph]||"6 x 1 km at race pace";
+const iv={Base:"5 x 3 min hard, 2 min easy jog between",Build:"6 x 1 km at goal race pace, 90 s rest","Race-specific":"8 x 1 km at race pace, 60 s rest","Doubles-specific":"6 x 1 km at your shared race pace, 60 s rest",Taper:"4 x 1 km at race pace, full recovery"}[ph]||"6 x 1 km at race pace";
 const comp={Base:"4 rounds: 1 km run + one station at light weight, focus on technique",Build:"5 rounds: 1 km run + one station at race weight, rotate stations",
-"Race-specific":"6 rounds: 1 km run + station at race weight, jog every transition","Rebuild":"5 rounds: 1 km run + your 2 weakest Verona stations",
-"Doubles-specific":"With your partner: 5 rounds of 1 km run together + station, practice switching",Taper:"3 rounds: 1 km run + station, smooth not hard"}[ph]||"5 rounds: 1 km run + station";
+"Race-specific":"6 rounds: 1 km run + station at race weight, jog every transition","Doubles-specific":"With your partner: 5 rounds of 1 km run together + station, practice switching",Taper:"3 rounds: 1 km run + station, smooth not hard"}[ph]||"5 rounds: 1 km run + station";
 const week=[
 {type:"Strength",title:"Lower strength + sled",detail:taper?"Light: 2 sets each of squats, RDLs and lunges, short sled pushes.":"Squats, Romanian deadlifts, walking lunges. Finish with heavy sled push and pull."},
 {type:"Intervals",title:"Run intervals",detail:iv},
@@ -524,7 +514,6 @@ function seg(el,opts,get,set){el.innerHTML="";opts.forEach(o=>{const b=document.
 function header(){
 const t=parseD(today());
 const days=d=>Math.max(0,Math.round((parseD(d)-t)/864e5));
-$("dVer").innerHTML=days("2027-01-28")+"<small>days</small>";
 $("dMad").innerHTML=days("2027-03-17")+"<small>days</small>";
 const td=today();
 const p=PHASES.find(p=>td>=p[0]&&td<=p[1]);
@@ -765,7 +754,7 @@ const prDate=()=>{let hit=null;["SkiErg","Row"].forEach(mc=>{let best=Infinity,c
 const trainedBefore=ms=>dates.some(d=>d<=ms&&dayGap(d,ms)<=7);
 const onDate=(ms,label)=>({date:td>=ms&&trainedBefore(ms)?ms:null,prog:td<ms?`In ${dayGap(td,ms)} days`:td>=ms&&!trainedBefore(ms)?"Missed: no training that week":null});
 const finisher=(from,to)=>{const r=B.filter(b=>b.item==="Full race"&&b.date>=from&&b.date<=to).sort(byDate);return r.length?r[0].date:null};
-const types=TYPES.filter(t=>t!=="Other"),doneTypes=new Set(S.map(x=>x.type).filter(t=>types.includes(t)));
+const types=TYPES.filter(t=>t!=="Other"&&t!=="HIIT class"),doneTypes=new Set(S.map(x=>x.type).filter(t=>types.includes(t)));
 const cnt=(n,label)=>({id:"days"+n,name:label,desc:`${n} training days logged`,date:dates[n-1]||null,cur:Math.min(dates.length,n),max:n});
 const wk=bestWeek(),sk=streaks(dates,rs);
 const fmtS=t=>fmtT(t);
@@ -785,12 +774,11 @@ cnt(10,"Ten down"),cnt(25,"Quarter century"),cnt(50,"Fifty strong"),cnt(100,"Tri
 {id:"skigoal",name:"SkiErg goal",desc:`Real 1000 m at or under ${fmtS(goalFor("SkiErg"))}`,date:under("SkiErg",goalFor("SkiErg")),prog:bestReal("SkiErg")?`Best: ${fmtS(bestReal("SkiErg"))}`:"Needs a real 1000 m piece"},
 {id:"rowgoal",name:"Row goal",desc:`Real 1000 m at or under ${fmtS(goalFor("Row"))}`,date:under("Row",goalFor("Row")),prog:bestReal("Row")?`Best: ${fmtS(bestReal("Row"))}`:"Needs a real 1000 m piece"}]},
 {name:"Race countdown",items:[
-{id:"v100",name:"100 to Verona",desc:"Training when Verona is 100 days out",...onDate("2026-10-20")},
+{id:"m150",name:"150 to Madrid",desc:"Training when Madrid is 150 days out",...onDate("2026-10-18")},
 {id:"m100",name:"100 to Madrid",desc:"Training when Madrid is 100 days out",...onDate("2026-12-07")},
-{id:"v30",name:"Verona in sight",desc:"Training when Verona is 30 days out",...onDate("2026-12-29")},
-{id:"vweek",name:"Race week",desc:"Made it to Verona race week",...onDate("2027-01-28")},
-{id:"vfin",name:"Verona finisher",desc:"Log a Full race benchmark in Verona",date:finisher("2027-01-28","2027-02-07"),prog:td<"2027-01-28"?`In ${dayGap(td,"2027-01-28")} days`:null},
+{id:"m60",name:"60 to Madrid",desc:"Training when Madrid is 60 days out",...onDate("2027-01-16")},
 {id:"m30",name:"Madrid in sight",desc:"Training when Madrid is 30 days out",...onDate("2027-02-15")},
+{id:"mweek",name:"Race week",desc:"Made it to Madrid race week",...onDate("2027-03-17")},
 {id:"mfin",name:"Madrid finisher",desc:"Log a Full race benchmark in Madrid",date:finisher("2027-03-17","2027-03-28"),prog:td<"2027-03-17"?`In ${dayGap(td,"2027-03-17")} days`:null}]},
 {name:"Variety",items:[
 {id:"alltypes",name:"All-rounder",desc:"Log every session type",date:doneTypes.size===types.length?(()=>{const seen=new Set();for(const x of [...S].sort(byDate)){if(types.includes(x.type))seen.add(x.type);if(seen.size===types.length)return x.date}return null})():null,cur:doneTypes.size,max:types.length},
@@ -932,7 +920,7 @@ const days=trainingDates().filter(inWk).length,mins=S.reduce((a,x)=>a+(+x.minute
 const st=streaks(trainingDates().filter(d=>d<=(sun<td?sun:td)),restDates());
 const bestIn=m=>{const p=ergPoints(m).filter(x=>inWk(x.date));return p.length?Math.min(...p.map(x=>x.v)):null};
 const badges=badgeGroups().flatMap(g=>g.items).filter(b=>b.date&&inWk(b.date)).map(b=>b.name);
-const toVer=Math.max(0,dayGap(td,"2027-01-28"));
+const toMad=Math.max(0,dayGap(td,"2027-03-17"));
 const c=document.createElement("canvas");c.width=1080;c.height=1920;const x=c.getContext("2d");
 try{await Promise.all(['800 200px "Barlow Condensed"','600 40px "IBM Plex Sans"','500 40px "JetBrains Mono"'].map(f=>document.fonts.load(f)))}catch(e){}
 const Y="#FFE600",K="#0A0A0A",G="#9A9A9A",D='"Barlow Condensed","Arial Narrow",sans-serif',P='"IBM Plex Sans",system-ui,sans-serif',M='"JetBrains Mono",monospace';
@@ -951,7 +939,7 @@ let y=1440;x.font=`500 38px ${M}`;
 if(badges.length){x.fillStyle=Y;x.font=`700 44px ${D}`;const words=("NEW BADGES: "+badges.join(", ")).toUpperCase().split(" ");let line="",lines=[];
 for(const w of words){const t=line?line+" "+w:w;if(x.measureText(t).width>920&&line){lines.push(line);line=w}else line=t}if(line)lines.push(line);
 const shown=lines.slice(0,2);if(lines.length>2){let l=shown[1];while(x.measureText(l+" …").width>920&&l.includes(" "))l=l.slice(0,l.lastIndexOf(" "));shown[1]=l+" …"}shown.forEach((l,k)=>x.fillText(l,80,y+10+k*56))}
-x.fillStyle=Y;x.font=`800 96px ${D}`;x.fillText(`${toVer} DAYS TO VERONA`,80,1760);
+x.fillStyle=Y;x.font=`800 96px ${D}`;x.fillText(`${toMad} DAYS TO MADRID`,80,1760);
 x.fillStyle=G;x.font=`500 32px ${M}`;x.fillText("hyrox-app-nine.vercel.app",80,1840);
 const blob=await new Promise(r=>c.toBlob(r,"image/png"));const url=URL.createObjectURL(blob),file=new File([blob],`hyrox-week-${mon}.png`,{type:"image/png"});
 openSheet(sheetHead("Weekly recap")+`<img class="recap-img" src="${url}" alt="Weekly recap card for ${esc(state.who)}, ${fmtD(mon)} to ${fmtD(sun)}"><button type="button" class="primary" id="recapShare">Share</button><a class="ghost" style="text-align:center;text-decoration:none" href="${url}" download="hyrox-week-${mon}.png">Download image</a>`);
