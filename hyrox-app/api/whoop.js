@@ -21,7 +21,10 @@ const TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token";
 // does not silently break the card.
 const API_BASES = ["https://api.prod.whoop.com/developer/v2", "https://api.prod.whoop.com/developer/v1"];
 const DEFAULT_SCOPES = "read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement offline";
-const CACHE_MS = 30 * 60 * 1000;  // recovery updates about once a day; no reason to poll harder
+const CACHE_MS = 30 * 60 * 1000;      // recovery updates about once a day; no reason to poll harder
+const HIST_MS = 12 * 60 * 60 * 1000;  // the 90-day history only gains one row a day
+const HIST_DAYS = 90;
+const WORKOUT_DAYS = 14;
 const STATE_MS = 10 * 60 * 1000;  // an authorisation link is good for ten minutes
 
 const env = k => (process.env[k] || "").trim();
@@ -139,6 +142,76 @@ function shape(rec) {
   };
 }
 
+// Last night's sleep, flattened. Naps are skipped: the recovery score comes from the
+// main sleep, and a 20 minute nap in the list would be misleading next to it.
+function shapeSleep(rec) {
+  if (!rec) return null;
+  const s = rec.score || {}, st = s.stage_summary || {};
+  const inBed = Number(st.total_in_bed_time_milli) || 0;
+  const awake = Number(st.total_awake_time_milli) || 0;
+  const asleep = Math.max(0, inBed - awake);
+  return {
+    date: (rec.end || rec.start || "").slice(0, 10),
+    start: rec.start || null,
+    end: rec.end || null,
+    state: rec.score_state || null,
+    minutes: asleep ? Math.round(asleep / 60000) : null,
+    performance: typeof s.sleep_performance_percentage === "number" ? Math.round(s.sleep_performance_percentage) : null,
+    efficiency: typeof s.sleep_efficiency_percentage === "number" ? Math.round(s.sleep_efficiency_percentage) : null,
+    consistency: typeof s.sleep_consistency_percentage === "number" ? Math.round(s.sleep_consistency_percentage) : null,
+    disturbances: Number.isFinite(st.disturbance_count) ? st.disturbance_count : null,
+    debtMin: Number.isFinite((s.sleep_needed || {}).need_from_sleep_debt_milli)
+      ? Math.round(s.sleep_needed.need_from_sleep_debt_milli / 60000) : null,
+  };
+}
+
+function shapeWorkout(rec) {
+  if (!rec) return null;
+  const s = rec.score || {};
+  const start = rec.start ? Date.parse(rec.start) : null;
+  const end = rec.end ? Date.parse(rec.end) : null;
+  const d = Number(s.distance_meter);
+  return {
+    id: rec.id || rec.v1_id || null,
+    // The local date the session happened on. timezone_offset keeps a late-night
+    // workout on the right day rather than rolling it forward in UTC.
+    date: localDate(rec.start, rec.timezone_offset),
+    sport: rec.sport_name || null,
+    minutes: start && end ? Math.round((end - start) / 60000) : null,
+    strain: typeof s.strain === "number" ? Math.round(s.strain * 10) / 10 : null,
+    avgHr: Number.isFinite(s.average_heart_rate) ? s.average_heart_rate : null,
+    maxHr: Number.isFinite(s.max_heart_rate) ? s.max_heart_rate : null,
+    // Present for GPS-tracked sports, absent or zero on a treadmill.
+    km: Number.isFinite(d) && d > 0 ? Math.round(d / 100) / 10 : null,
+  };
+}
+
+function localDate(iso, offset) {
+  if (!iso) return "";
+  const t = Date.parse(iso);
+  if (!Number.isFinite(t)) return String(iso).slice(0, 10);
+  const m = /^([+-])(\d{2}):(\d{2})$/.exec(String(offset || ""));
+  const shift = m ? (m[1] === "-" ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3])) * 60000 : 0;
+  return new Date(t + shift).toISOString().slice(0, 10);
+}
+
+const daysAgo = n => new Date(Date.now() - n * 864e5).toISOString();
+
+// Walk pages until we have the window we asked for. limit is capped at 25 by WHOOP.
+async function collect(path, access, days, maxPages) {
+  const out = [];
+  let token = null;
+  for (let i = 0; i < maxPages; i++) {
+    const q = new URLSearchParams({ limit: "25", start: daysAgo(days) });
+    if (token) q.set("nextToken", token);
+    const json = await apiGet(`${path}?${q}`, access);
+    out.push(...(json.records || []));
+    token = json.next_token;
+    if (!token) break;
+  }
+  return out;
+}
+
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -202,10 +275,10 @@ export default async function handler(req, res) {
       return res.status(200).json({ linked: false });
     }
 
-    if (body.op === "recovery") {
+    if (body.op === "recovery" || body.op === "sync") {
       if (!d.tokens || !d.tokens.refresh) return res.status(200).json({ linked: false });
       const fresh = body.force || !d.cache || Date.now() - d.cache.at > CACHE_MS;
-      if (!fresh) return res.status(200).json({ linked: true, cached: true, ...d.cache.data });
+      if (!fresh) return res.status(200).json({ linked: true, cached: true, ...d.cache.data, history: (d.history || {}).days || {} });
 
       let access;
       try { access = await token(d); }
@@ -216,16 +289,48 @@ export default async function handler(req, res) {
       catch (e) {
         if (String(e.message) === "unauthorised") return res.status(200).json({ linked: true, error: "WHOOP sign-in expired. Reconnect to fix it.", expired: true });
         // Serve stale rather than nothing: a day-old recovery score still beats a blank card.
-        if (d.cache) return res.status(200).json({ linked: true, cached: true, stale: true, ...d.cache.data });
+        if (d.cache) return res.status(200).json({ linked: true, cached: true, stale: true, ...d.cache.data, history: (d.history || {}).days || {} });
         return res.status(200).json({ linked: true, error: e.message });
       }
 
       const recs = (json.records || []).map(shape).filter(r => r && r.date);
       recs.sort((a, b) => (a.date < b.date ? 1 : -1));
-      const data = { latest: recs[0] || null, recent: recs.slice(0, 7) };
+
+      // Sleep: most recent non-nap.
+      let sleep = null;
+      try {
+        const sj = await apiGet("/sleep?limit=10", access);
+        const naps = (sj.records || []).filter(r => !r.nap).map(shapeSleep).filter(x => x && x.date);
+        naps.sort((a, b) => (a.date < b.date ? 1 : -1));
+        sleep = naps[0] || null;
+      } catch {}
+
+      // Workouts WHOOP detected, so the app can spot sessions that never got logged.
+      let workouts = [];
+      try {
+        workouts = (await collect("/workout", access, WORKOUT_DAYS, 3))
+          .map(shapeWorkout).filter(w => w && w.date);
+        workouts.sort((a, b) => (a.date < b.date ? 1 : -1));
+      } catch {}
+
+      const data = { latest: recs[0] || null, recent: recs.slice(0, 7), sleep, workouts };
       d.cache = { at: Date.now(), data };
+
+      // 90 days of {date, score}, refreshed twice a day. The client joins this against
+      // its own session log to work out what each session type costs in recovery;
+      // doing the join here would mean reading the training log's blob too.
+      if (!d.history || Date.now() - d.history.at > HIST_MS) {
+        try {
+          const all = (await collect("/recovery", access, HIST_DAYS, 4)).map(shape)
+            .filter(r => r && r.date && r.score != null);
+          const byDate = {};
+          for (const r of all) byDate[r.date] = r.score;   // one score per day
+          d.history = { at: Date.now(), days: byDate };
+        } catch {}
+      }
+
       await save(d);
-      return res.status(200).json({ linked: true, cached: false, ...data });
+      return res.status(200).json({ linked: true, cached: false, ...data, history: (d.history || {}).days || {} });
     }
 
     return res.status(400).json({ error: "Unknown action" });
