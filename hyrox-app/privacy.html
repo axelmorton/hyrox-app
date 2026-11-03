@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy · HYROX Tracker</title>
+<meta name="theme-color" content="#F3F3F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=IBM+Plex+Sans:wght@400;600&display=swap">
+<style>
+:root{--ground:#F3F3F1;--surface:#FFFFFF;--ink:#0A0A0A;--muted:#5E5E5E;--line:#E0E0DC;--hi:#FFE600;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--ground:#000;--surface:#111;--ink:#fff;--muted:#9A9A9A;--line:#2A2A2A;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:16px/1.65 "IBM Plex Sans",system-ui,sans-serif;padding:24px 16px 64px}
+.wrap{max-width:680px;margin:0 auto}
+h1{font-family:"Barlow Condensed",Arial Narrow,sans-serif;font-size:38px;font-weight:800;text-transform:uppercase;letter-spacing:.02em;line-height:1;margin:0 0 4px}
+h2{font-family:"Barlow Condensed",Arial Narrow,sans-serif;font-size:21px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;margin:30px 0 8px}
+.eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.updated{color:var(--muted);font-size:14px;margin:0 0 26px}
+p,li{margin:0 0 11px}
+ul{padding-left:20px}
+a{color:var(--ink)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:16px 0}
+.mark{background:linear-gradient(transparent 62%,rgba(255,222,0,.45) 62%);padding-inline:2px}
+footer{margin-top:38px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="eyebrow">HYROX Tracker</div>
+<h1>Privacy Policy</h1>
+<p class="updated">Last updated 3 November 2026</p>
+
+<p>The HYROX Tracker is a personal training app built and run by one person for his own HYROX training, and shared with one training partner. It is not a company, a product or a service offered to the public. There is no sign-up, and no accounts exist other than the two.</p>
+
+<h2>Who runs it</h2>
+<p>Axel Morton, Montreal, Canada. Contact: <strong>REPLACE_WITH_CONTACT_EMAIL</strong>.</p>
+
+<h2>What the app stores</h2>
+<ul>
+<li><strong>Training entries you type in:</strong> dates, session types, running distance, session duration, self-rated effort and soreness, notes, SkiErg and rowing pieces, benchmark times, race simulation splits, and a doubles race plan.</li>
+<li><strong>WHOOP data, only if you connect a WHOOP account:</strong> recovery score, heart rate variability and resting heart rate; sleep duration, stages and performance; daily strain and heart rate summaries; workout type and strain; height, weight and maximum heart rate; and the name and email on the WHOOP profile. The app stores the most recent values so it can show them next to the training plan. It does not receive continuous heart rate samples, ECG data or WHOOP journal entries, because the WHOOP API does not expose them.</li>
+<li><strong>Access tokens</strong> issued by WHOOP, so the app can refresh data without asking you to sign in again.</li>
+</ul>
+
+<h2>What is public and what is not</h2>
+<div class="panel">
+<p><span class="mark">The training log is readable by anyone who visits this site.</span> That is deliberate: the app and its source code are public so the training can be followed openly. Sessions, distances, times, benchmarks and race simulation splits are all visible without signing in.</p>
+<p><strong>WHOOP data is not public.</strong> Recovery, sleep, strain, body measurements and profile information are returned only to a request carrying the correct passcode, and are never shown to anonymous visitors. Writing or changing anything at all requires a passcode.</p>
+</div>
+
+<h2>Where it is stored</h2>
+<p>In a private Vercel Blob store, on infrastructure operated by Vercel, with the site itself hosted by Vercel. Nothing is copied anywhere else.</p>
+
+<h2>What the app does not do</h2>
+<ul>
+<li>No analytics, tracking pixels, advertising or cookies for tracking.</li>
+<li>No data is sold, rented or shared with anyone. There are no third party recipients beyond the hosting described above.</li>
+<li>No data is used to train machine learning models.</li>
+<li>The app has no connection to any AI assistant account, and does not send your data to one.</li>
+</ul>
+
+<h2>Disconnecting WHOOP</h2>
+<p>You can revoke the app's access at any time from the WHOOP app or the WHOOP account settings, under connected apps. You can also disconnect from inside this app, which deletes the stored tokens and the cached WHOOP data immediately. Revoking access stops any further data being retrieved.</p>
+
+<h2>Keeping and deleting data</h2>
+<p>Training entries are kept until deleted in the app, which removes them from storage. WHOOP data is kept only as the latest cached values and is overwritten on each refresh, or deleted on disconnect. To have everything removed, use the contact address above.</p>
+
+<h2>Your rights</h2>
+<p>Under Quebec and Canadian privacy law, and under the GDPR where it applies, you may request access to the personal information held about you, ask for it to be corrected, or ask for it to be deleted. Requests go to the contact address above. Because the app serves two named people who each hold their own passcode, most of this can be done directly in the app.</p>
+
+<h2>Children</h2>
+<p>The app is not intended for, and is not made available to, anyone under 16.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes, the date at the top of this page changes with it.</p>
+
+<footer>
+<a href="/">Back to the tracker</a>
+</footer>
+</div>
+</body>
+</html>
