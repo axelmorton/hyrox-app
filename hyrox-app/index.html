@@ -560,6 +560,7 @@ $("recPanel").innerHTML=`<div class="rec">`+
 `</div></div>`+
 (adv?`<div class="hint" style="margin-top:12px">${esc(adv)}</div>`:"")+
 (sl&&sl.debtMin>=30?`<div class="hint" style="margin-top:6px">Carrying about ${fmtH(sl.debtMin)} of sleep debt.</div>`:"")+
+(w.warn?`<div class="hint" style="margin-top:6px;color:var(--warn)">Some WHOOP data didn\u2019t load: ${esc(w.warn.join("; "))}</div>`:"")+
 (w.stale?`<div class="hint" style="margin-top:6px">Showing the last reading that synced. WHOOP is not answering right now.</div>`:"")+
 recRow();
 wireRec();
