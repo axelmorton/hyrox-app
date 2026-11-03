@@ -24,7 +24,8 @@ const DEFAULT_SCOPES = "read:recovery read:cycles read:sleep read:workout read:p
 const CACHE_MS = 30 * 60 * 1000;  // recovery updates about once a day; no reason to poll harder
 const STATE_MS = 10 * 60 * 1000;  // an authorisation link is good for ten minutes
 
-const scopes = () => process.env.WHOOP_SCOPES || DEFAULT_SCOPES;
+const env = k => (process.env[k] || "").trim();
+const scopes = () => env("WHOOP_SCOPES") || DEFAULT_SCOPES;
 const hash = s => createHash("sha256").update(String(s || "")).digest();
 
 // Admin only. Noé has his own login for training data but no business seeing Axel's HRV.
@@ -53,20 +54,36 @@ function redirectUri(req) {
   return `https://${host}/api/whoop`;
 }
 
-async function postForm(body) {
-  const r = await fetch(TOKEN_URL, {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams(body).toString(),
-  });
-  const text = await r.text();
-  let json = null;
-  try { json = JSON.parse(text); } catch {}
-  if (!r.ok) {
-    const why = (json && (json.error_description || json.error)) || text.slice(0, 200);
-    throw new Error(`WHOOP token request failed (${r.status}): ${why}`);
+// WHOOP's token endpoint registers clients with a specific authentication method.
+// client_secret_basic (credentials in an HTTP Basic header) is the common default and
+// what the endpoint layout suggests; client_secret_post (credentials in the form body)
+// is the other. Sending the wrong one returns 401 "Client authentication failed", which
+// looks identical to a wrong secret. So try Basic, then fall back to the body.
+async function postForm(params) {
+  const id = env("WHOOP_CLIENT_ID"), secret = env("WHOOP_CLIENT_SECRET");
+  const basic = Buffer.from(`${id}:${secret}`).toString("base64");
+  const attempts = [
+    { name: "basic", headers: { authorization: `Basic ${basic}` }, body: params },
+    { name: "post", headers: {}, body: { ...params, client_id: id, client_secret: secret } },
+  ];
+  let last = "";
+  for (const a of attempts) {
+    const r = await fetch(TOKEN_URL, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", ...a.headers },
+      body: new URLSearchParams(a.body).toString(),
+    });
+    const text = await r.text();
+    let json = null;
+    try { json = JSON.parse(text); } catch {}
+    if (r.ok) return json;
+    last = `${a.name} auth -> ${r.status}: ${(json && (json.error_description || json.error)) || text.slice(0, 160)}`;
+    // Only an authentication failure is worth retrying with the other method. A bad or
+    // already-used code fails the same way whichever method is used.
+    const err = json && json.error;
+    if (r.status !== 401 && err !== "invalid_client") break;
   }
-  return json;
+  throw new Error(`WHOOP token request failed. Last attempt: ${last}`);
 }
 
 function store(d, t) {
@@ -87,8 +104,6 @@ async function token(d) {
   const t = await postForm({
     grant_type: "refresh_token",
     refresh_token: d.tokens.refresh,
-    client_id: process.env.WHOOP_CLIENT_ID,
-    client_secret: process.env.WHOOP_CLIENT_SECRET,
     scope: "offline",
   });
   store(d, t);
@@ -128,7 +143,7 @@ export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("X-Content-Type-Options", "nosniff");
 
-  const id = process.env.WHOOP_CLIENT_ID, secret = process.env.WHOOP_CLIENT_SECRET;
+  const id = env("WHOOP_CLIENT_ID"), secret = env("WHOOP_CLIENT_SECRET");
   if (!id || !secret) return res.status(500).json({ error: "Set WHOOP_CLIENT_ID and WHOOP_CLIENT_SECRET in Vercel, then redeploy." });
 
   try {
@@ -149,8 +164,6 @@ export default async function handler(req, res) {
       const t = await postForm({
         grant_type: "authorization_code",
         code,
-        client_id: id,
-        client_secret: secret,
         redirect_uri: redirectUri(req),
       });
       store(d, t);
