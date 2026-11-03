@@ -48,9 +48,17 @@ h2{font-size:20px;font-weight:700}
 .rec-score{font-family:var(--display);font-size:54px;font-weight:800;line-height:.9;font-variant-numeric:tabular-nums}
 .rec-score small{font-size:20px;font-weight:700;margin-left:2px}
 .rec-ok{color:var(--good)}.rec-mid{color:var(--warn)}.rec-low{color:var(--bad)}
-.rec-vitals{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rec-vitals{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px}
 .rec-vitals>div{display:flex;flex-direction:column;gap:2px}
 .rec-vitals .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:16px;font-weight:500}
+.bytype td.btb{width:42%}
+.bar-t{height:8px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar-t i{display:block;height:100%;border-radius:999px}
+.wk-miss{display:flex;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.wk-miss:first-child{border-top:0}
+.wk-miss .mg{display:flex;gap:6px}
+.wk-miss button{font:600 12px var(--body);padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.wk-miss button.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .rec-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .rec-row button{flex:1;min-width:120px}
 .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -273,6 +281,10 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="badge-top"><h2>Recovery</h2><span class="chip" id="recWhen"></span></div>
 <div class="panel" id="recPanel"></div>
 </section>
+<section id="missSec" hidden>
+<div class="badge-top"><h2>Not logged yet</h2><span class="chip" id="missCount"></span></div>
+<div class="panel"><div class="hint" style="padding-bottom:4px">WHOOP recorded these but your log has nothing that day.</div><div id="missList"></div></div>
+</section>
 <section>
 <h2>Log a session</h2>
 <div class="panel">
@@ -420,6 +432,10 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <h2 id="dayTitle">Day</h2>
 <div class="panel list" id="dayDetail"></div>
 </section>
+<section id="btSec" hidden>
+<h2>What each session costs</h2>
+<div class="panel"><table class="bytype"><thead><tr><th>Session</th><th class="r">Next-day recovery</th><th class="btb"></th></tr></thead><tbody id="btRows"></tbody></table><div class="hint" id="btNote" style="margin-top:10px"></div></div>
+</section>
 <section>
 <h2>Since you started</h2>
 <div class="board" id="seasonStats"></div>
@@ -516,10 +532,10 @@ if(b==="mid")return hard?`Today is ${plan.title.toLowerCase()}. Amber recovery, 
 return hard?`Today is ${plan.title.toLowerCase()}. Red recovery, so swap it for an easy day or a rest day and pick the hard session up later in the week.`:"Red recovery. Easy or rest today, and log a rest day if you take one.";
 }
 async function whoopLoad(force){
-if(getUser()!=="Axel"){state.whoop=null;recCard();return}
+if(getUser()!=="Axel"){state.whoop=null;recCard();missCard();byTypeCard();return}
 try{state.whoop=await api("/api/whoop",{op:"recovery",force:!!force})}
 catch(e){state.whoop={error:e.code==="not_granted"?null:(e.message||"Couldn\u2019t reach WHOOP")}}
-recCard();loadCheck();chart();
+recCard();missCard();byTypeCard();loadCheck();chart();
 }
 function recCard(){
 const sec=$("recSec"),w=state.whoop;
@@ -533,13 +549,17 @@ const l=w.latest;
 if(!l||l.score==null){
 when.textContent=l&&l.state==="PENDING_SCORE"?"Scoring":"No score yet";
 $("recPanel").innerHTML=`<div class="hint">${l&&l.calibrating?"WHOOP is still calibrating to you, so there is no recovery score yet.":"No scored recovery yet today. WHOOP scores it after it detects your sleep."}</div>`+recRow();wireRec();return}
-const band=recBand(l.score),plan=planFor(today()),adv=recAdvice(l.score,plan);
+const band=recBand(l.score),plan=planFor(today()),adv=recAdvice(l.score,plan),sl=w.sleep;
 when.textContent=l.date===today()?"Today":fmtD(l.date);when.className="chip"+(w.stale?" warn":"");
 $("recPanel").innerHTML=`<div class="rec">`+
 `<div class="rec-score rec-${band}">${l.score}<small>%</small></div>`+
 `<div class="rec-vitals"><div><span class="eyebrow">HRV</span><span class="v">${l.hrv!=null?l.hrv+" ms":"-"}</span></div>`+
-`<div><span class="eyebrow">Resting HR</span><span class="v">${l.rhr!=null?l.rhr+" bpm":"-"}</span></div></div></div>`+
+`<div><span class="eyebrow">Resting HR</span><span class="v">${l.rhr!=null?l.rhr+" bpm":"-"}</span></div>`+
+(sl?`<div><span class="eyebrow">Slept</span><span class="v">${sl.minutes!=null?fmtH(sl.minutes):"-"}</span></div>`+
+`<div><span class="eyebrow">Sleep score</span><span class="v">${sl.performance!=null?sl.performance+"%":"-"}</span></div>`:"")+
+`</div></div>`+
 (adv?`<div class="hint" style="margin-top:12px">${esc(adv)}</div>`:"")+
+(sl&&sl.debtMin>=30?`<div class="hint" style="margin-top:6px">Carrying about ${fmtH(sl.debtMin)} of sleep debt.</div>`:"")+
 (w.stale?`<div class="hint" style="margin-top:6px">Showing the last reading that synced. WHOOP is not answering right now.</div>`:"")+
 recRow();
 wireRec();
@@ -552,6 +572,42 @@ catch(e){link.disabled=false;toast(e.message||"Couldn\u2019t start the WHOOP sig
 const sync=$("recSync");if(sync)sync.onclick=async()=>{sync.disabled=true;sync.textContent="Refreshing\u2026";await whoopLoad(true);toast("Recovery refreshed")};
 const un=$("recUnlink");if(un)un.onclick=async()=>{if(!confirm("Disconnect WHOOP? Your tokens and cached recovery are deleted."))return;
 try{await api("/api/whoop",{op:"unlink"});state.whoop={linked:false};recCard();toast("WHOOP disconnected")}catch(e){toast(e.message||"Couldn\u2019t disconnect",true)}};
+}
+// ===== WHOOP workouts with nothing logged against them =====
+// A day counts as covered if anything at all was logged that day. Matching individual
+// workouts to individual sessions would misfire on days with two sessions.
+const MISS_KEY="hyrox-miss-done";
+const missDone=()=>{try{return JSON.parse(localStorage.getItem(MISS_KEY)||"[]")}catch(e){return[]}};
+const missHide=id=>{try{localStorage.setItem(MISS_KEY,JSON.stringify([String(id),...missDone()].slice(0,60)))}catch(e){}};
+function missing(){
+const w=state.whoop;if(!w||!w.linked||!Array.isArray(w.workouts))return[];
+const td=today(),gone=missDone();
+return w.workouts.filter(x=>x.date&&x.date<=td&&x.id&&!gone.includes(String(x.id))
+  &&(x.minutes==null||x.minutes>=15)            // ignore incidental activity
+  &&dayEntries(x.date).length===0               // nothing logged that day at all
+  &&!restDates().has(x.date)).slice(0,3);       // and not a day called as rest
+}
+function missCard(){
+const sec=$("missSec"),list=missing();
+if(getUser()!=="Axel"||!list.length){sec.hidden=true;return}
+sec.hidden=false;$("missCount").textContent=list.length===1?"1 session":`${list.length} sessions`;
+$("missList").innerHTML=list.map(x=>{
+const bits=[x.minutes?`${x.minutes} min`:"",x.km?`${x.km} km`:"",x.strain!=null?`strain ${x.strain}`:""].filter(Boolean).join(" · ");
+return `<div class="wk-miss"><div><div><b>${esc(x.sport||"Workout")}</b> · ${fmtD(x.date)}</div><div class="meta">${esc(bits)}</div></div>`+
+`<div class="mg"><button type="button" class="go" data-mlog="${esc(x.id)}">Log it</button><button type="button" data-mskip="${esc(x.id)}">Hide</button></div></div>`}).join("");
+}
+function missPrefill(id){
+const x=missing().find(y=>String(y.id)===String(id));if(!x)return;
+const pl=planFor(x.date);
+state.type=(pl&&pl.type&&TYPES.includes(pl.type))?pl.type:"Other";
+seg($("types"),TYPES,()=>state.type,v=>{state.type=v;syncErg()});syncErg();
+$("sDate").value=x.date;
+if(x.minutes)$("sMin").value=x.minutes;
+if(x.km)$("sKm").value=x.km;                 // WHOOP only has this for GPS sports
+$("sNote").value=[x.sport?x.sport:"",x.strain!=null?`strain ${x.strain}`:""].filter(Boolean).join(" · ");
+growNote();
+$("fSession").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});
+toast(x.km?"Filled from WHOOP. Check the distance.":"Filled from WHOOP. Add your distance.");
 }
 function loadCheck(){
 const mine=state.sessions.filter(s=>(s.athlete||"Axel")===state.who);
@@ -771,7 +827,7 @@ h+=`<button type="button" class="${cls.join(" ")}" data-day="${ds}" aria-pressed
 $("calGrid").innerHTML=h;
 const moDays=all.filter(d=>d.startsWith(state.calMonth)).length;
 $("calMonthSum").textContent=`${moDays} training ${moDays===1?"day":"days"} this month`;
-dayDetail();monthRows();seasonStats();
+dayDetail();monthRows();seasonStats();byTypeCard();
 }
 function dayDetail(){
 const ds=state.calDay,td=today(),raw=dayEntries(ds),pl=planFor(ds);
@@ -956,6 +1012,36 @@ const volCell=(l,v)=>`<div><span class="eyebrow">${l}</span><span class="v">${v}
 function volume(pick){const A=state.sessions.filter(x=>isMine(x)&&x.date&&pick(x.date)),S=A.filter(notRest),E=state.ergs.filter(x=>isMine(x)&&x.date&&pick(x.date)),B=state.bench.filter(x=>isMine(x)&&x.date&&pick(x.date));
 const solo=E.filter(e=>!S.some(x=>x.date===e.date&&x.type===e.machine));
 return{S,E,B,solo,rest:A.length-S.length,km:S.reduce((a,x)=>a+(+x.km||0),0),mins:S.reduce((a,x)=>a+(+x.minutes||0),0),em:E.reduce((a,x)=>a+(+x.distance||0),0),count:S.length+solo.length}}
+// ===== What each session type costs in next-day recovery =====
+// A session on day D shows up in the recovery scored the following morning, so the
+// join is session.date + 1. Descriptive only: the samples are small and plenty of
+// other things move recovery, which the note under the table says out loud.
+const BT_MIN=3;
+function byType(){
+const h=(state.whoop&&state.whoop.history)||null;if(!h)return null;
+const td=today(),groups={};
+state.sessions.forEach(x=>{
+  if(!isMine(x)||!notRest(x)||!x.date||x.date>td)return;
+  const v=h[addDays(x.date,1)];if(typeof v!=="number")return;
+  (groups[x.type]=groups[x.type]||[]).push(v);
+});
+const rows=Object.entries(groups).filter(([,v])=>v.length>=BT_MIN)
+  .map(([type,v])=>({type,n:v.length,avg:Math.round(v.reduce((a,b)=>a+b,0)/v.length)}))
+  .sort((a,b)=>a.avg-b.avg);
+return {rows,days:Object.keys(h).length};
+}
+function byTypeCard(){
+const sec=$("btSec");if(getUser()!=="Axel"){sec.hidden=true;return}
+const r=byType();
+if(!r||!r.rows.length){sec.hidden=true;return}
+sec.hidden=false;
+const max=Math.max(...r.rows.map(x=>x.avg),100);
+$("btRows").innerHTML=r.rows.map(x=>{const b=recBand(x.avg);
+return `<tr><td>${esc(x.type)}<div class="meta">${x.n} ${x.n===1?"session":"sessions"}</div></td>`+
+`<td class="r num rec-${b}">${x.avg}%</td>`+
+`<td class="btb"><div class="bar-t"><i style="width:${Math.round(x.avg/max*100)}%;background:var(--${b==="ok"?"good":b==="mid"?"warn":"bad"})"></i></div></td></tr>`}).join("");
+$("btNote").textContent=`Average WHOOP recovery the morning after each kind of session, over ${r.days} days of data. Hardest on you at the top. Small samples, and sleep, travel and life move recovery too, so read it as a pattern rather than proof.`;
+}
 function seasonStats(){
 const td=today(),v=volume(d=>d<=td),dates=trainingDates().filter(d=>d<=td),first=dates[0];
 const cell=(l,val,u)=>`<div><span class="eyebrow">${l}</span><span class="big num${String(val).length>6?" sm":""}">${val}${u?`<small>${u}</small>`:""}</span></div>`;
@@ -1019,7 +1105,7 @@ const PAGES={train:"pgTrain",race:"pgRace",calendar:"pgCal",badges:"pgBadges"};
 function showPage(pg){if(!PAGES[pg])pg="train";Object.entries(PAGES).forEach(([k,id])=>$(id).hidden=k!==pg);
 document.querySelectorAll(".tabbar button").forEach(b=>{if(b.dataset.pg===pg)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
 try{history.replaceState(null,"","#"+pg)}catch(e){}window.scrollTo(0,0)}
-function render(){todayCard();recCard();loadCheck();ergCards();chart();benchTable();recent();racePage();calPage();weekPlan();badgesPage()}
+function render(){todayCard();recCard();missCard();loadCheck();ergCards();chart();benchTable();recent();racePage();calPage();weekPlan();badgesPage()}
 function growNote(){const t=$("sNote");if(!t)return;t.style.height="auto";t.style.height=Math.max(84,t.scrollHeight+2)+"px"}
 function isErgType(){return MACHINES.includes(state.type)}
 function syncErg(){const on=isErgType();$("sErgRow").hidden=!on;$("sErgHint").hidden=!on;$("sKmWrap").hidden=on}
@@ -1132,6 +1218,9 @@ b.onclick=()=>{state[key]=String(state[key])===o?0:+o;[...el.children].forEach(c
 scaleSeg($("sEffort"),"effort");scaleSeg($("sSore"),"sore");
 $("tLog").onclick=()=>{const pl=planFor(today());if(!pl.type)return;state.type=pl.type;seg($("types"),TYPES,()=>state.type,v=>{state.type=v;syncErg()});syncErg();
 $("sDate").value=today();$("sNote").value=pl.title;growNote();$("fSession").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});setTimeout(()=>$("sKm").focus({preventScroll:true}),350)};
+$("missList").onclick=e=>{const go=e.target.closest("[data-mlog]"),skip=e.target.closest("[data-mskip]");
+if(go){missPrefill(go.dataset.mlog);return}
+if(skip){missHide(skip.dataset.mskip);missCard()}};
 $("tRest").onclick=async()=>{const rb=$("tRest"),id=rb.dataset.undo;rb.disabled=true;
 try{if(id){if(await remove("session",id))toast("Rest day removed")}
 else if(await add("sessions",{date:today(),type:REST,km:0,minutes:0,effort:0,soreness:0,note:"Rest day"}))toast("Rest day logged. It won\u2019t count against your plan.")}
