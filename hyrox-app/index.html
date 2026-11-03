@@ -17,18 +17,18 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
 <style>
 :root{
---ground:#F3F3F1; --surface:#FFFFFF; --ink:#0A0A0A; --muted:#5E5E5E; --line:#E0E0DC; --accent:#0A0A0A; --accent-ink:#FFE600; --band:rgba(255,222,0,.38); --good:#15803D; --warn:#C2410C; --hi:#FFE600; --hi-edge:#0A0A0A;
+--ground:#F3F3F1; --surface:#FFFFFF; --ink:#0A0A0A; --muted:#5E5E5E; --line:#E0E0DC; --accent:#0A0A0A; --accent-ink:#FFE600; --band:rgba(255,222,0,.38); --good:#15803D; --warn:#C2410C; --bad:#B91C1C; --hi:#FFE600; --hi-edge:#0A0A0A;
 --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
 --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
 --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
 color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
---ground:#000000; --surface:#111111; --ink:#FFFFFF; --muted:#9A9A9A; --line:#2A2A2A; --accent:#FFE600; --accent-ink:#000000; --band:rgba(255,230,0,.14); --good:#4ADE80; --warn:#FF8A3D; --hi:#FFE600; --hi-edge:#FFE600;
+--ground:#000000; --surface:#111111; --ink:#FFFFFF; --muted:#9A9A9A; --line:#2A2A2A; --accent:#FFE600; --accent-ink:#000000; --band:rgba(255,230,0,.14); --good:#4ADE80; --warn:#FF8A3D; --bad:#F87171; --hi:#FFE600; --hi-edge:#FFE600;
 color-scheme:dark;
 }}
 :root[data-theme="dark"]{
---ground:#000000; --surface:#111111; --ink:#FFFFFF; --muted:#9A9A9A; --line:#2A2A2A; --accent:#FFE600; --accent-ink:#000000; --band:rgba(255,230,0,.14); --good:#4ADE80; --warn:#FF8A3D; --hi:#FFE600; --hi-edge:#FFE600;
+--ground:#000000; --surface:#111111; --ink:#FFFFFF; --muted:#9A9A9A; --line:#2A2A2A; --accent:#FFE600; --accent-ink:#000000; --band:rgba(255,230,0,.14); --good:#4ADE80; --warn:#FF8A3D; --bad:#F87171; --hi:#FFE600; --hi-edge:#FFE600;
 color-scheme:dark;
 }
 .theme{display:flex;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--surface)}
@@ -44,6 +44,15 @@ body{background:var(--ground);color:var(--ink);font:15px/1.5 var(--body);padding
 h1,h2{font-family:var(--display);text-transform:uppercase;letter-spacing:.02em;margin:0;text-wrap:balance}
 h1{font-size:34px;font-weight:800;line-height:1}
 h2{font-size:20px;font-weight:700}
+.rec{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.rec-score{font-family:var(--display);font-size:54px;font-weight:800;line-height:.9;font-variant-numeric:tabular-nums}
+.rec-score small{font-size:20px;font-weight:700;margin-left:2px}
+.rec-ok{color:var(--good)}.rec-mid{color:var(--warn)}.rec-low{color:var(--bad)}
+.rec-vitals{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rec-vitals>div{display:flex;flex-direction:column;gap:2px}
+.rec-vitals .v{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:16px;font-weight:500}
+.rec-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.rec-row button{flex:1;min-width:120px}
 .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .mono,.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
 header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
@@ -260,6 +269,10 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <button type="button" class="ghost" id="tRest" hidden>Log a rest day</button>
 </div>
 </section>
+<section id="recSec" hidden>
+<div class="badge-top"><h2>Recovery</h2><span class="chip" id="recWhen"></span></div>
+<div class="panel" id="recPanel"></div>
+</section>
 <section>
 <h2>Log a session</h2>
 <div class="panel">
@@ -315,6 +328,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="load">
 <div><span class="eyebrow">Avg effort · 7 days</span><div class="v num" id="lEff">-</div><span class="hint" id="lEffPrev"></span></div>
 <div><span class="eyebrow">Avg soreness · 7 days</span><div class="v num" id="lSore">-</div><span class="hint" id="lSorePrev"></span></div>
+<div id="lRecWrap" hidden><span class="eyebrow">WHOOP recovery</span><div class="v num" id="lRec">-</div><span class="hint">Today</span></div>
 </div>
 <div><span class="chip" id="lFlag">Rate effort and soreness when you log</span></div>
 </div>
@@ -488,6 +502,57 @@ if(!pl.type){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=t
 else if(rest&&!done){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=true;rb.hidden=false;rb.textContent="Undo rest day";rb.dataset.undo=rest.id}
 else{$("tLog").hidden=done;st.textContent=done?"Done":pl.key?"Key session":"Not logged";st.className="chip"+(done?" ok":pl.key?" key":"");rb.hidden=done;rb.textContent="Log a rest day";rb.dataset.undo=""}
 }
+// ===== WHOOP recovery =====
+// Only Axel sees this: it is his health data, and api/whoop.js refuses anyone else.
+const recBand=v=>v==null?null:v>=67?"ok":v>=34?"mid":"low";
+// Thresholds are WHOOP\u2019s own green/yellow/red bands. What to DO about them is a
+// rule of thumb, not science, same as the 10%-a-week running rule. Advisory only.
+const HARD=["Intervals","Compromised","Simulation"];
+function recAdvice(score,plan){
+if(score==null||!plan||!plan.type)return"";
+const hard=HARD.includes(plan.type),b=recBand(score);
+if(b==="ok")return hard?`Green light for ${plan.title.toLowerCase()}.`:"";
+if(b==="mid")return hard?`Today is ${plan.title.toLowerCase()}. Amber recovery, so hold the easy end of the pace range or move it a day.`:"Amber recovery. Keep today genuinely easy.";
+return hard?`Today is ${plan.title.toLowerCase()}. Red recovery, so swap it for an easy day or a rest day and pick the hard session up later in the week.`:"Red recovery. Easy or rest today, and log a rest day if you take one.";
+}
+async function whoopLoad(force){
+if(getUser()!=="Axel"){state.whoop=null;recCard();return}
+try{state.whoop=await api("/api/whoop",{op:"recovery",force:!!force})}
+catch(e){state.whoop={error:e.code==="not_granted"?null:(e.message||"Couldn\u2019t reach WHOOP")}}
+recCard();loadCheck();chart();
+}
+function recCard(){
+const sec=$("recSec"),w=state.whoop;
+if(getUser()!=="Axel"||!w){sec.hidden=true;return}
+sec.hidden=false;
+const when=$("recWhen");when.textContent="";when.className="chip";
+if(w.error){$("recPanel").innerHTML=`<div class="hint">${esc(w.error)}</div>`+(w.expired?`<div class="rec-row"><button type="button" class="primary" id="recLink">Reconnect WHOOP</button></div>`:"");wireRec();return}
+if(!w.linked){
+$("recPanel").innerHTML=`<div class="hint">Connect WHOOP to see your recovery score, HRV and resting heart rate next to the day\u2019s plan. Only you can see it.</div><div class="rec-row"><button type="button" class="primary" id="recLink">Connect WHOOP</button></div>`;wireRec();return}
+const l=w.latest;
+if(!l||l.score==null){
+when.textContent=l&&l.state==="PENDING_SCORE"?"Scoring":"No score yet";
+$("recPanel").innerHTML=`<div class="hint">${l&&l.calibrating?"WHOOP is still calibrating to you, so there is no recovery score yet.":"No scored recovery yet today. WHOOP scores it after it detects your sleep."}</div>`+recRow();wireRec();return}
+const band=recBand(l.score),plan=planFor(today()),adv=recAdvice(l.score,plan);
+when.textContent=l.date===today()?"Today":fmtD(l.date);when.className="chip"+(w.stale?" warn":"");
+$("recPanel").innerHTML=`<div class="rec">`+
+`<div class="rec-score rec-${band}">${l.score}<small>%</small></div>`+
+`<div class="rec-vitals"><div><span class="eyebrow">HRV</span><span class="v">${l.hrv!=null?l.hrv+" ms":"-"}</span></div>`+
+`<div><span class="eyebrow">Resting HR</span><span class="v">${l.rhr!=null?l.rhr+" bpm":"-"}</span></div></div></div>`+
+(adv?`<div class="hint" style="margin-top:12px">${esc(adv)}</div>`:"")+
+(w.stale?`<div class="hint" style="margin-top:6px">Showing the last reading that synced. WHOOP is not answering right now.</div>`:"")+
+recRow();
+wireRec();
+}
+const recRow=()=>`<div class="rec-row"><button type="button" class="ghost" id="recSync">Refresh</button><button type="button" class="ghost" id="recUnlink">Disconnect</button></div>`;
+function wireRec(){
+const link=$("recLink");if(link)link.onclick=async()=>{link.disabled=true;
+try{const r=await api("/api/whoop",{op:"link"});location.href=r.url}
+catch(e){link.disabled=false;toast(e.message||"Couldn\u2019t start the WHOOP sign-in",true)}};
+const sync=$("recSync");if(sync)sync.onclick=async()=>{sync.disabled=true;sync.textContent="Refreshing\u2026";await whoopLoad(true);toast("Recovery refreshed")};
+const un=$("recUnlink");if(un)un.onclick=async()=>{if(!confirm("Disconnect WHOOP? Your tokens and cached recovery are deleted."))return;
+try{await api("/api/whoop",{op:"unlink"});state.whoop={linked:false};recCard();toast("WHOOP disconnected")}catch(e){toast(e.message||"Couldn\u2019t disconnect",true)}};
+}
 function loadCheck(){
 const mine=state.sessions.filter(s=>(s.athlete||"Axel")===state.who);
 const t=parseD(today()).getTime(),day=864e5;
@@ -496,6 +561,8 @@ const avg=(arr,k)=>{const v=arr.map(s=>Number(s[k])).filter(n=>n>=1);return v.le
 const cur=win(7,0),prev=win(14,7);
 const e=avg(cur,"effort"),so=avg(cur,"soreness"),pe=avg(prev,"effort"),ps=avg(prev,"soreness");
 const f=v=>v==null?"-":v.toFixed(1);
+const rw=state.whoop&&state.whoop.latest&&state.whoop.latest.score!=null?state.whoop.latest.score:null;
+if($("lRec")){const b=recBand(rw);$("lRec").textContent=rw==null?"-":rw+"%";$("lRec").className="v num"+(b?" rec-"+b:"");$("lRecWrap").hidden=rw==null}
 $("lEff").innerHTML=f(e)+(e!=null?"<small>/5</small>":"");$("lSore").innerHTML=f(so)+(so!=null?"<small>/5</small>":"");
 $("lEffPrev").textContent=pe!=null?`Previous 7 days: ${f(pe)}`:"";$("lSorePrev").textContent=ps!=null?`Previous 7 days: ${f(ps)}`:"";
 const rated=cur.filter(s=>Number(s.soreness)>=1||Number(s.effort)>=1).length,fl=$("lFlag");
@@ -553,6 +620,8 @@ else if(cur.km>40){tag="Above the band";cls="chip warn";txt+=". Above the 25 to 
 else if(cur.km>=25){tag="In the band";cls="chip ok";txt+=". In the 25 to 40 km band."}
 else if(prev&&prev.km>=25){tag="On track";cls="chip";txt+=`. Last week ${r(prev.km)} km.`}
 else{tag="Building";cls="chip";txt+=". The target band is 25 to 40 km."}
+const rs=state.whoop&&state.whoop.latest?state.whoop.latest.score:null,rb=recBand(rs);
+if(cls==="chip warn"&&(rb==="low"||rb==="mid"))txt+=` Your recovery is ${rs}% on top of that.`;
 sum.textContent=txt;chip.textContent=tag;chip.className=cls;chip.hidden=!tag;
 }
 function benchTable(){
@@ -950,7 +1019,7 @@ const PAGES={train:"pgTrain",race:"pgRace",calendar:"pgCal",badges:"pgBadges"};
 function showPage(pg){if(!PAGES[pg])pg="train";Object.entries(PAGES).forEach(([k,id])=>$(id).hidden=k!==pg);
 document.querySelectorAll(".tabbar button").forEach(b=>{if(b.dataset.pg===pg)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
 try{history.replaceState(null,"","#"+pg)}catch(e){}window.scrollTo(0,0)}
-function render(){todayCard();loadCheck();ergCards();chart();benchTable();recent();racePage();calPage();weekPlan();badgesPage()}
+function render(){todayCard();recCard();loadCheck();ergCards();chart();benchTable();recent();racePage();calPage();weekPlan();badgesPage()}
 function growNote(){const t=$("sNote");if(!t)return;t.style.height="auto";t.style.height=Math.max(84,t.scrollHeight+2)+"px"}
 function isErgType(){return MACHINES.includes(state.type)}
 function syncErg(){const on=isErgType();$("sErgRow").hidden=!on;$("sErgHint").hidden=!on;$("sKmWrap").hidden=on}
@@ -1025,7 +1094,7 @@ const sheetHead=t=>`<div class="sheet-head"><h2>${t}</h2><button type="button" c
 function openSignIn(msg){
 const u=getUser();
 if(u&&!msg){openSheet(sheetHead("Account")+`<div>Signed in as <b>${esc(u)}</b> on this phone. Your passcode is remembered here until you sign out.</div><div class="hint">Not ${esc(u)}? Sign out, then sign in with your own passcode.</div><div class="hint">${u==="Axel"?"You can edit everyone's entries.":"You can add and edit your own entries and the doubles plan."}</div><button type="button" class="danger" id="signOut">Sign out</button>`);
-$("signOut").onclick=()=>{setAuth("","");closeSheet();toast("Signed out")};return}
+$("signOut").onclick=()=>{setAuth("","");state.whoop=null;recCard();closeSheet();toast("Signed out")};return}
 openSheet(sheetHead("Sign in")+`<form id="signForm" style="gap:10px"><div class="hint">${esc(msg||"Enter your passcode. Axel and Noé each have their own.")}</div><label>Passcode<input type="password" id="sgPass" autocomplete="current-password" required></label><div class="err" id="sgErr"></div><button class="primary" type="submit">Sign in</button></form>`);
 setTimeout(()=>{try{$("sgPass").focus()}catch(e){}},100);
 $("signForm").onsubmit=async e=>{e.preventDefault();const p=$("sgPass").value;
@@ -1034,7 +1103,7 @@ $("sgErr").textContent="Checking…";
 try{const r=await fetch("/api/data",{method:"POST",headers:{"content-type":"application/json","x-app-pass":p},body:JSON.stringify({op:"whoami"})});
 if(r.status===401){$("sgErr").textContent="Wrong passcode.";return}
 if(!r.ok){$("sgErr").textContent="Something went wrong. Try again.";return}
-const j=await r.json();setAuth(p,j.user);state.who=j.user;seg($("who"),WHO,()=>state.who,v=>state.who=v);closeSheet();render();toast(`Signed in as ${j.user}`);flushQueue()}
+const j=await r.json();setAuth(p,j.user);state.who=j.user;seg($("who"),WHO,()=>state.who,v=>state.who=v);closeSheet();render();toast(`Signed in as ${j.user}`);flushQueue();whoopLoad()}
 catch(err){$("sgErr").textContent="No connection. Try again when you have signal."}};
 }
 // edit entries
@@ -1125,7 +1194,10 @@ $("recapBtn").onclick=()=>recapCard();
 window.addEventListener("online",()=>sync());
 if(simGet())simOpen();
 showPage((location.hash||"").slice(1));
-header();lsLoad();render();$("status").textContent="Loading…";sync();
+header();lsLoad();render();$("status").textContent="Loading…";sync();whoopLoad();
+{const q=new URLSearchParams(location.search).get("whoop");
+if(q){toast(q==="linked"?"WHOOP connected":q==="denied"?"WHOOP sign-in cancelled":"That WHOOP link expired. Try connecting again.",true);
+try{history.replaceState(null,"",location.pathname+location.hash)}catch(e){}}}
 document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){header();sync()}});
 </script>
 </body>

@@ -1,5 +1,9 @@
 {
-  "functions": { "api/data.js": { "maxDuration": 15 } },
+  "functions": {
+    "api/data.js": { "maxDuration": 15 },
+    "api/whoop.js": { "maxDuration": 15 },
+    "api/whoop-hook.js": { "maxDuration": 15 }
+  },
   "headers": [
     {
       "source": "/(.*)",
