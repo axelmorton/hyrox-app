@@ -59,6 +59,10 @@ h2{font-size:20px;font-weight:700}
 .wk-miss .mg{display:flex;gap:6px}
 .wk-miss button{font:600 12px var(--body);padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
 .wk-miss button.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.quick{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.25}
+.quick small{font:500 12px var(--mono);opacity:.75;font-variant-numeric:tabular-nums}
+.t-alt{display:flex;gap:8px}
+.t-alt button{flex:1}
 .rec-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .rec-row button{flex:1;min-width:120px}
 .eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -273,8 +277,8 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <div class="top"><span class="eyebrow" id="tDay">Today</span><span class="chip" id="tState">Not logged</span></div>
 <div class="plan" id="tPlan">-</div>
 <div class="hint" id="tDetail"></div>
-<button type="button" class="primary" id="tLog">Log this session</button>
-<button type="button" class="ghost" id="tRest" hidden>Log a rest day</button>
+<button type="button" class="primary" id="tQuick"><span class="quick"><span>Log as done</span><small id="tQuickSub"></small></span></button>
+<div class="t-alt"><button type="button" class="ghost" id="tLog">Add details</button><button type="button" class="ghost" id="tRest" hidden>Rest day</button></div>
 </div>
 </section>
 <section id="recSec" hidden>
@@ -506,6 +510,20 @@ const week=[
 ];
 return week[wd];
 }
+// One-tap logging. The log was nearly empty while training was happening, and the
+// erg form (3 fields) was used far more than the session form (6), so the form itself
+// was the obstacle. This logs the planned session with sensible numbers and lets him
+// correct them later from Recent, which beats no record at all.
+const QUICK_FALLBACK={"Easy run":{km:8,min:50},"Intervals":{km:8,min:50},"Compromised":{km:6,min:55},
+"Strength":{km:0,min:55},"HIIT class":{km:5,min:60},"Simulation":{km:8,min:90},"Other":{km:0,min:45}};
+function quickDefaults(type){
+const mine=state.sessions.filter(x=>isMine(x)&&notRest(x)&&x.type===type);
+const med=a=>{const v=a.filter(n=>n>0).sort((x,y)=>x-y);return v.length?v[Math.floor(v.length/2)]:null};
+const F=QUICK_FALLBACK[type]||{km:0,min:45};
+const learned=mine.length>=3;
+const km=learned?med(mine.map(x=>+x.km||0)):null, min=learned?med(mine.map(x=>+x.minutes||0)):null;
+return {km:km!=null?km:F.km, minutes:min!=null?min:F.min, learned};
+}
 function todayCard(){
 const ds=today(),pl=planFor(ds);
 $("tDay").textContent=parseD(ds).toLocaleDateString(undefined,{weekday:"long",month:"short",day:"numeric"});
@@ -513,10 +531,12 @@ $("tPlan").textContent=pl.title;$("tDetail").textContent=pl.detail;
 const done=dayEntries(ds).length>0;
 const rest=restOn(ds);
 const st=$("tState");
-const rb=$("tRest");
-if(!pl.type){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=true;rb.hidden=true;rb.dataset.undo=""}
-else if(rest&&!done){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=true;rb.hidden=false;rb.textContent="Undo rest day";rb.dataset.undo=rest.id}
-else{$("tLog").hidden=done;st.textContent=done?"Done":pl.key?"Key session":"Not logged";st.className="chip"+(done?" ok":pl.key?" key":"");rb.hidden=done;rb.textContent="Log a rest day";rb.dataset.undo=""}
+const rb=$("tRest"),qb=$("tQuick");
+const showQuick=v=>{qb.hidden=!v;if(!v)return;const q=quickDefaults(pl.type);
+$("tQuickSub").textContent=[q.minutes?`${q.minutes} min`:"",q.km?`${q.km} km`:""].filter(Boolean).join(" \u00b7 ")+(q.learned?"":" \u00b7 typical");};
+if(!pl.type){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=true;showQuick(false);rb.hidden=true;rb.dataset.undo=""}
+else if(rest&&!done){st.textContent="Rest day";st.className="chip ok";$("tLog").hidden=true;showQuick(false);rb.hidden=false;rb.textContent="Undo rest day";rb.dataset.undo=rest.id}
+else{$("tLog").hidden=done;showQuick(!done);st.textContent=done?"Done":pl.key?"Key session":"Not logged";st.className="chip"+(done?" ok":pl.key?" key":"");rb.hidden=done;rb.textContent="Rest day";rb.dataset.undo=""}
 }
 // ===== WHOOP recovery =====
 // Only Axel sees this: it is his health data, and api/whoop.js refuses anyone else.
@@ -1222,6 +1242,11 @@ $("sDate").value=today();$("sNote").value=pl.title;growNote();$("fSession").scro
 $("missList").onclick=e=>{const go=e.target.closest("[data-mlog]"),skip=e.target.closest("[data-mskip]");
 if(go){missPrefill(go.dataset.mlog);return}
 if(skip){missHide(skip.dataset.mskip);missCard()}};
+$("tQuick").onclick=async()=>{const pl=planFor(today());if(!pl.type)return;
+const q=quickDefaults(pl.type),qb=$("tQuick");qb.disabled=true;
+try{const ok=await add("sessions",{date:today(),type:pl.type,km:q.km,minutes:q.minutes,effort:0,soreness:0,note:pl.title});
+if(ok)toast(`Logged ${pl.title}. Change the numbers in Recent if they were different.`,true)}
+finally{qb.disabled=false}};
 $("tRest").onclick=async()=>{const rb=$("tRest"),id=rb.dataset.undo;rb.disabled=true;
 try{if(id){if(await remove("session",id))toast("Rest day removed")}
 else if(await add("sessions",{date:today(),type:REST,km:0,minutes:0,effort:0,soreness:0,note:"Rest day"}))toast("Rest day logged. It won\u2019t count against your plan.")}
