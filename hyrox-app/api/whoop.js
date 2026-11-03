@@ -24,6 +24,7 @@ const DEFAULT_SCOPES = "read:recovery read:cycles read:sleep read:workout read:p
 const CACHE_MS = 30 * 60 * 1000;      // recovery updates about once a day; no reason to poll harder
 const HIST_MS = 12 * 60 * 60 * 1000;  // the 90-day history only gains one row a day
 const HIST_DAYS = 90;
+const SHAPE = 2;   // bump when the cached payload shape changes
 const WORKOUT_DAYS = 14;
 const STATE_MS = 10 * 60 * 1000;  // an authorisation link is good for ten minutes
 
@@ -277,7 +278,7 @@ export default async function handler(req, res) {
 
     if (body.op === "recovery" || body.op === "sync") {
       if (!d.tokens || !d.tokens.refresh) return res.status(200).json({ linked: false });
-      const fresh = body.force || !d.cache || Date.now() - d.cache.at > CACHE_MS;
+      const fresh = body.force || !d.cache || d.cache.shape !== SHAPE || Date.now() - d.cache.at > CACHE_MS;
       if (!fresh) return res.status(200).json({ linked: true, cached: true, ...d.cache.data, history: (d.history || {}).days || {} });
 
       let access;
@@ -297,24 +298,25 @@ export default async function handler(req, res) {
       recs.sort((a, b) => (a.date < b.date ? 1 : -1));
 
       // Sleep: most recent non-nap.
+      const warn = [];
       let sleep = null;
       try {
-        const sj = await apiGet("/sleep?limit=10", access);
+        const sj = await apiGet("/activity/sleep?limit=10", access);
         const naps = (sj.records || []).filter(r => !r.nap).map(shapeSleep).filter(x => x && x.date);
         naps.sort((a, b) => (a.date < b.date ? 1 : -1));
         sleep = naps[0] || null;
-      } catch {}
+      } catch (e) { warn.push(`sleep: ${String(e.message || e).slice(0, 120)}`); }
 
       // Workouts WHOOP detected, so the app can spot sessions that never got logged.
       let workouts = [];
       try {
-        workouts = (await collect("/workout", access, WORKOUT_DAYS, 3))
+        workouts = (await collect("/activity/workout", access, WORKOUT_DAYS, 3))
           .map(shapeWorkout).filter(w => w && w.date);
         workouts.sort((a, b) => (a.date < b.date ? 1 : -1));
-      } catch {}
+      } catch (e) { warn.push(`workouts: ${String(e.message || e).slice(0, 120)}`); }
 
-      const data = { latest: recs[0] || null, recent: recs.slice(0, 7), sleep, workouts };
-      d.cache = { at: Date.now(), data };
+      const data = { latest: recs[0] || null, recent: recs.slice(0, 7), sleep, workouts, warn: warn.length ? warn : null };
+      d.cache = { at: Date.now(), shape: SHAPE, data };
 
       // 90 days of {date, score}, refreshed twice a day. The client joins this against
       // its own session log to work out what each session type costs in recovery;
@@ -326,7 +328,7 @@ export default async function handler(req, res) {
           const byDate = {};
           for (const r of all) byDate[r.date] = r.score;   // one score per day
           d.history = { at: Date.now(), days: byDate };
-        } catch {}
+        } catch (e) { warn.push(`history: ${String(e.message || e).slice(0, 120)}`); }
       }
 
       await save(d);
